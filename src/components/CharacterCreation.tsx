@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Swords, AlertCircle } from 'lucide-react';
 import { PromptInput } from './PromptInput';
 import { ExamplePrompts } from './ui/ExamplePrompts';
@@ -7,13 +7,14 @@ import { BattleScreen } from './BattleScreen';
 
 export function CharacterCreation() {
   const { state } = useGame();
+  const [selectedPrompt, setSelectedPrompt] = useState<string>('');
 
   if (state.character) {
     return <BattleScreen />;
   }
 
   const handlePromptSelect = (prompt: string) => {
-    // This will be handled by the PromptInput component
+    setSelectedPrompt(prompt);
   };
 
   return (
@@ -38,7 +39,7 @@ export function CharacterCreation() {
           </div>
         )}
         
-        <PromptInput onPromptSelect={handlePromptSelect} />
+        <PromptInput selectedPrompt={selectedPrompt} />
         
         <ExamplePrompts onPromptSelect={handlePromptSelect} />
       </div>

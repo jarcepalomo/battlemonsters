@@ -55,7 +55,7 @@ export function ExamplePrompts({ onPromptSelect }: ExamplePromptsProps) {
             <div className="flex items-start gap-2">
               <div className="w-1.5 h-1.5 rounded-full bg-purple-400 mt-2 flex-shrink-0 group-hover:bg-purple-300 transition-colors" />
               <p className="text-sm text-purple-300 group-hover:text-purple-200 transition-colors leading-relaxed">
-                "{prompt}"
+                {prompt}
               </p>
             </div>
           </button>
