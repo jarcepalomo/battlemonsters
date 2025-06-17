@@ -32,7 +32,7 @@ export function PromptInput({ selectedPrompt }: PromptInputProps) {
       
       // Calculate the number of lines
       const lineHeight = 24; // Approximate line height in pixels
-      const padding = 32; // Top and bottom padding (16px each)
+      const padding = 24; // Top and bottom padding (12px each)
       const minHeight = lineHeight + padding; // Minimum height for 1 line
       const maxHeight = (lineHeight * 5) + padding; // Maximum height for 5 lines
       
@@ -137,7 +137,7 @@ export function PromptInput({ selectedPrompt }: PromptInputProps) {
       <form onSubmit={handleSubmit} className="relative group">
         <div className="absolute inset-0 bg-gradient-to-r from-purple-600/20 to-pink-600/20 rounded-lg blur opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         <div className="relative">
-          <div className="absolute left-3 top-3 text-purple-400 z-10">
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-purple-400 z-10">
             <Wand2 className="w-5 h-5" />
           </div>
           <textarea
