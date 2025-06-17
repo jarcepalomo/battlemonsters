@@ -64,7 +64,7 @@ export const DISTINCTIVE_ATTRIBUTES = {
   ],
   ice: [
     'and azure frost', 'and silver shimmer', 'and crystal clarity', 'and polar winds',
-    'and diamond dust', 'and glacial blue', 'and winter\'s breath', \'and frozen time'
+    'and diamond dust', 'and glacial blue', 'and winter\'s breath', 'and frozen time'
   ],
   storm: [
     'and electric blue', 'and storm-gray clouds', 'and lightning streaks', 'and thunder echoes',
