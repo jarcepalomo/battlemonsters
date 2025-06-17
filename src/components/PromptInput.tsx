@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Wand2 } from 'lucide-react';
 import { useGame } from '../context/GameContext';
+import { SuggestionPopup } from './ui/SuggestionPopup';
 
 interface PromptInputProps {
   selectedPrompt?: string;
@@ -8,13 +9,17 @@ interface PromptInputProps {
 
 export function PromptInput({ selectedPrompt }: PromptInputProps) {
   const [prompt, setPrompt] = useState('');
+  const [isFocused, setIsFocused] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const { dispatch } = useGame();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // Update input when a prompt is selected from examples
   useEffect(() => {
     if (selectedPrompt) {
       setPrompt(selectedPrompt);
+      setShowSuggestions(false); // Hide suggestions when example is selected
     }
   }, [selectedPrompt]);
 
@@ -46,10 +51,24 @@ export function PromptInput({ selectedPrompt }: PromptInputProps) {
     }
   }, [prompt]);
 
+  // Handle clicks outside to close suggestions
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false);
+        setIsFocused(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!prompt.trim()) return;
 
+    setShowSuggestions(false);
     dispatch({ type: 'SET_ERROR', payload: null });
     dispatch({ type: 'SET_LOADING', payload: true });
     
@@ -86,10 +105,35 @@ export function PromptInput({ selectedPrompt }: PromptInputProps) {
       e.preventDefault();
       handleSubmit(e as any);
     }
+    // Hide suggestions on Escape
+    if (e.key === 'Escape') {
+      setShowSuggestions(false);
+      setIsFocused(false);
+    }
+  };
+
+  const handleFocus = () => {
+    setIsFocused(true);
+    setShowSuggestions(true);
+  };
+
+  const handleSuggestionClick = (suggestion: string) => {
+    setPrompt(suggestion);
+    // Keep suggestions open for next category unless it's a complete description
+    const hasAllParts = suggestion.includes(' with ') && suggestion.includes(' and ');
+    if (hasAllParts) {
+      setShowSuggestions(false);
+    }
+    // Focus back on textarea
+    textareaRef.current?.focus();
+  };
+
+  const handleCloseSuggestions = () => {
+    setShowSuggestions(false);
   };
 
   return (
-    <div className="space-y-4">
+    <div ref={containerRef} className="space-y-4 relative">
       <form onSubmit={handleSubmit} className="relative group">
         <div className="absolute inset-0 bg-gradient-to-r from-purple-600/20 to-pink-600/20 rounded-lg blur opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         <div className="relative">
@@ -101,6 +145,7 @@ export function PromptInput({ selectedPrompt }: PromptInputProps) {
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             onKeyDown={handleKeyDown}
+            onFocus={handleFocus}
             placeholder="Describe your legendary character..."
             className="w-full pl-12 pr-14 py-4 bg-gray-800/50 border border-purple-500/30 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 backdrop-blur-sm resize-none leading-6"
             style={{ 
@@ -118,6 +163,14 @@ export function PromptInput({ selectedPrompt }: PromptInputProps) {
             <Send className="w-5 h-5" />
           </button>
         </div>
+
+        {/* Suggestion Popup */}
+        <SuggestionPopup
+          isVisible={showSuggestions && isFocused}
+          currentText={prompt}
+          onSuggestionClick={handleSuggestionClick}
+          onClose={handleCloseSuggestions}
+        />
       </form>
       
       {/* Helpful hint */}
