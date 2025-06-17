@@ -29,6 +29,15 @@ export function SuggestionPopup({ isVisible, currentText, onSuggestionClick, onC
     selectedTheme: 'generic'
   });
 
+  // Force regeneration of suggestions when popup becomes visible
+  const [regenerationKey, setRegenerationKey] = useState(0);
+
+  useEffect(() => {
+    if (isVisible) {
+      setRegenerationKey(prev => prev + 1);
+    }
+  }, [isVisible]);
+
   // Determine current category and generate appropriate suggestions
   useEffect(() => {
     if (!isVisible) return;
@@ -44,13 +53,13 @@ export function SuggestionPopup({ isVisible, currentText, onSuggestionClick, onC
       newCategory = 'character';
     } else {
       // Check if we have a character type
-      const hasCharacterType = getRandomCharacterTypes(30).some(type => 
+      const hasCharacterType = getRandomCharacterTypes(100).some(type => 
         text.includes(type.toLowerCase())
       );
       
       if (hasCharacterType) {
         // Find the character type to determine theme
-        const matchedType = getRandomCharacterTypes(30).find(type => 
+        const matchedType = getRandomCharacterTypes(100).find(type => 
           text.includes(type.toLowerCase())
         );
         if (matchedType) {
@@ -65,15 +74,40 @@ export function SuggestionPopup({ isVisible, currentText, onSuggestionClick, onC
       }
     }
 
-    // Generate suggestions based on category
+    // Generate suggestions based on category with more randomization
     let newSuggestions: string[] = [];
     if (newCategory === 'character') {
       newSuggestions = getRandomCharacterTypes(3);
     } else {
-      // Mix physical features and distinctive attributes for endless variety
-      const physicalFeatures = getRandomPhysicalFeatures(newTheme, 2);
-      const distinctiveAttributes = getRandomDistinctiveAttributes(newTheme, 1);
-      newSuggestions = [...physicalFeatures, ...distinctiveAttributes].sort(() => 0.5 - Math.random());
+      // Create a more varied mix of features and attributes
+      const mixRatio = Math.random();
+      let physicalCount, attributeCount;
+      
+      if (mixRatio < 0.33) {
+        // Mostly physical features
+        physicalCount = 2;
+        attributeCount = 1;
+      } else if (mixRatio < 0.66) {
+        // Mostly attributes
+        physicalCount = 1;
+        attributeCount = 2;
+      } else {
+        // Even mix or all of one type
+        if (Math.random() < 0.5) {
+          physicalCount = 3;
+          attributeCount = 0;
+        } else {
+          physicalCount = 0;
+          attributeCount = 3;
+        }
+      }
+      
+      const physicalFeatures = physicalCount > 0 ? getRandomPhysicalFeatures(newTheme, physicalCount) : [];
+      const distinctiveAttributes = attributeCount > 0 ? getRandomDistinctiveAttributes(newTheme, attributeCount) : [];
+      
+      // Combine and shuffle for maximum randomness
+      newSuggestions = [...physicalFeatures, ...distinctiveAttributes]
+        .sort(() => Math.random() - 0.5);
     }
 
     setSuggestionState({
@@ -81,7 +115,7 @@ export function SuggestionPopup({ isVisible, currentText, onSuggestionClick, onC
       suggestions: newSuggestions,
       selectedTheme: newTheme
     });
-  }, [isVisible, currentText]);
+  }, [isVisible, currentText, regenerationKey]);
 
   const handleSuggestionClick = (e: React.MouseEvent, suggestion: string) => {
     // Prevent any form submission or event bubbling
@@ -99,6 +133,11 @@ export function SuggestionPopup({ isVisible, currentText, onSuggestionClick, onC
     }
     
     onSuggestionClick(newText);
+    
+    // Force regeneration of suggestions after selection
+    setTimeout(() => {
+      setRegenerationKey(prev => prev + 1);
+    }, 100);
   };
 
   const getCategoryTitle = () => {
@@ -148,7 +187,7 @@ export function SuggestionPopup({ isVisible, currentText, onSuggestionClick, onC
         <div className="space-y-2">
           {suggestionState.suggestions.map((suggestion, index) => (
             <button
-              key={`${suggestionState.category}-${suggestion}-${index}`}
+              key={`${suggestionState.category}-${suggestion}-${index}-${regenerationKey}`}
               type="button"
               onClick={(e) => handleSuggestionClick(e, suggestion)}
               className="w-full text-left p-3 bg-gray-800/50 hover:bg-purple-900/30 border border-gray-700/50 hover:border-purple-500/40 rounded-lg transition-all duration-200 group"
