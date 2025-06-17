@@ -1,6 +1,7 @@
 import React from 'react';
 import { Swords, AlertCircle } from 'lucide-react';
 import { PromptInput } from './PromptInput';
+import { ExamplePrompts } from './ui/ExamplePrompts';
 import { useGame } from '../context/GameContext';
 import { BattleScreen } from './BattleScreen';
 
@@ -11,38 +12,41 @@ export function CharacterCreation() {
     return <BattleScreen />;
   }
 
+  const handlePromptSelect = (prompt: string) => {
+    // This will be handled by the PromptInput component
+  };
+
   return (
     <div className="w-full max-w-2xl mx-auto px-4 py-8">
       <div className="text-center mb-8">
-        <div className="inline-flex items-center justify-center p-2 mb-4 rounded-full bg-purple-900/50">
-          <Swords className="w-8 h-8 text-purple-400" />
+        <div className="inline-flex items-center justify-center p-3 mb-6 rounded-full bg-gradient-to-r from-purple-900/50 to-pink-900/50 backdrop-blur-sm border border-purple-500/20">
+          <Swords className="w-10 h-10 text-purple-400" />
         </div>
-        <h1 className="text-4xl font-bold text-white mb-2">
-          Create Your Character
+        <h1 className="text-5xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent mb-3">
+          Forge Your Legend
         </h1>
-        <p className="text-purple-200 text-lg">
-          Enter a creative prompt to generate your battle character
+        <p className="text-purple-200 text-xl leading-relaxed">
+          Craft a unique battle character with extraordinary powers
         </p>
       </div>
       
-      <div className="bg-gray-900/50 backdrop-blur-sm p-6 rounded-xl border border-purple-500/20">
+      <div className="bg-gray-900/50 backdrop-blur-sm p-8 rounded-2xl border border-purple-500/20 shadow-2xl">
         {state.error && (
-          <div className="mb-4 p-4 bg-red-900/50 border border-red-500/50 rounded-lg flex items-center gap-2 text-red-200">
+          <div className="mb-6 p-4 bg-red-900/50 border border-red-500/50 rounded-lg flex items-center gap-3 text-red-200 backdrop-blur-sm">
             <AlertCircle className="w-5 h-5 flex-shrink-0" />
             <p>{state.error}</p>
           </div>
         )}
         
-        <PromptInput />
+        <PromptInput onPromptSelect={handlePromptSelect} />
         
-        <div className="mt-6 text-purple-300 text-sm">
-          <h3 className="font-semibold text-purple-200 mb-2">Example prompts:</h3>
-          <ul className="space-y-1 list-disc list-inside">
-            <li>"Cyber samurai with lightning fists"</li>
-            <li>"Ancient dragon mage wielding time magic"</li>
-            <li>"Shadow assassin who can melt into darkness"</li>
-          </ul>
-        </div>
+        <ExamplePrompts onPromptSelect={handlePromptSelect} />
+      </div>
+      
+      {/* Decorative elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 w-24 h-24 bg-pink-500/10 rounded-full blur-2xl animate-pulse delay-1000" />
       </div>
     </div>
   );
