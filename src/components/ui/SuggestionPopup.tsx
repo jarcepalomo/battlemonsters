@@ -14,7 +14,7 @@ interface SuggestionPopupProps {
   onClose: () => void;
 }
 
-type SuggestionCategory = 'character' | 'physical' | 'attribute';
+type SuggestionCategory = 'character' | 'features';
 
 interface SuggestionState {
   category: SuggestionCategory;
@@ -43,7 +43,7 @@ export function SuggestionPopup({ isVisible, currentText, onSuggestionClick, onC
       // Empty text - show character types
       newCategory = 'character';
     } else {
-      // Analyze text to determine what's already been selected
+      // Check if we have a character type
       const hasCharacterType = getRandomCharacterTypes(30).some(type => 
         text.includes(type.toLowerCase())
       );
@@ -57,16 +57,8 @@ export function SuggestionPopup({ isVisible, currentText, onSuggestionClick, onC
           newTheme = getThemeFromCharacterType(matchedType);
         }
         
-        // Check if physical features are already added
-        const hasPhysicalFeature = text.includes(' with ');
-        
-        if (hasPhysicalFeature) {
-          // Show distinctive attributes
-          newCategory = 'attribute';
-        } else {
-          // Show physical features
-          newCategory = 'physical';
-        }
+        // Show features (mix of physical features and distinctive attributes)
+        newCategory = 'features';
       } else {
         // No character type detected, show character types
         newCategory = 'character';
@@ -75,16 +67,13 @@ export function SuggestionPopup({ isVisible, currentText, onSuggestionClick, onC
 
     // Generate suggestions based on category
     let newSuggestions: string[] = [];
-    switch (newCategory) {
-      case 'character':
-        newSuggestions = getRandomCharacterTypes(3);
-        break;
-      case 'physical':
-        newSuggestions = getRandomPhysicalFeatures(newTheme, 3);
-        break;
-      case 'attribute':
-        newSuggestions = getRandomDistinctiveAttributes(newTheme, 3);
-        break;
+    if (newCategory === 'character') {
+      newSuggestions = getRandomCharacterTypes(3);
+    } else {
+      // Mix physical features and distinctive attributes for endless variety
+      const physicalFeatures = getRandomPhysicalFeatures(newTheme, 2);
+      const distinctiveAttributes = getRandomDistinctiveAttributes(newTheme, 1);
+      newSuggestions = [...physicalFeatures, ...distinctiveAttributes].sort(() => 0.5 - Math.random());
     }
 
     setSuggestionState({
@@ -104,11 +93,8 @@ export function SuggestionPopup({ isVisible, currentText, onSuggestionClick, onC
     if (suggestionState.category === 'character') {
       // Replace or add character type
       newText = suggestion;
-    } else if (suggestionState.category === 'physical') {
-      // Add physical feature
-      newText = currentText.trim() + ' ' + suggestion;
-    } else if (suggestionState.category === 'attribute') {
-      // Add distinctive attribute
+    } else {
+      // Add feature (physical or distinctive attribute)
       newText = currentText.trim() + ' ' + suggestion;
     }
     
@@ -119,10 +105,8 @@ export function SuggestionPopup({ isVisible, currentText, onSuggestionClick, onC
     switch (suggestionState.category) {
       case 'character':
         return 'Choose Character Type';
-      case 'physical':
-        return 'Add Physical Features';
-      case 'attribute':
-        return 'Add Distinctive Attributes';
+      case 'features':
+        return 'Add More Details';
       default:
         return 'Suggestions';
     }
@@ -132,10 +116,8 @@ export function SuggestionPopup({ isVisible, currentText, onSuggestionClick, onC
     switch (suggestionState.category) {
       case 'character':
         return '⚔️';
-      case 'physical':
+      case 'features':
         return '✨';
-      case 'attribute':
-        return '🎨';
       default:
         return '💡';
     }
@@ -158,15 +140,8 @@ export function SuggestionPopup({ isVisible, currentText, onSuggestionClick, onC
           </div>
           <div className="flex items-center gap-1 text-xs text-purple-400">
             <Sparkles className="w-3 h-3" />
-            <span>Step {suggestionState.category === 'character' ? '1' : suggestionState.category === 'physical' ? '2' : '3'}/3</span>
+            <span>Enhance</span>
           </div>
-        </div>
-
-        {/* Progress indicator */}
-        <div className="flex gap-1 mb-3">
-          <div className={`h-1 flex-1 rounded-full ${suggestionState.category === 'character' ? 'bg-purple-500' : 'bg-purple-500/50'}`} />
-          <div className={`h-1 flex-1 rounded-full ${suggestionState.category === 'physical' ? 'bg-purple-500' : suggestionState.category === 'attribute' ? 'bg-purple-500/50' : 'bg-gray-600'}`} />
-          <div className={`h-1 flex-1 rounded-full ${suggestionState.category === 'attribute' ? 'bg-purple-500' : 'bg-gray-600'}`} />
         </div>
 
         {/* Suggestions */}
@@ -186,15 +161,6 @@ export function SuggestionPopup({ isVisible, currentText, onSuggestionClick, onC
               </div>
             </button>
           ))}
-        </div>
-
-        {/* Helper text */}
-        <div className="mt-3 pt-3 border-t border-gray-700/50">
-          <p className="text-xs text-purple-400/70 text-center">
-            {suggestionState.category === 'character' && 'Click to select your character type'}
-            {suggestionState.category === 'physical' && 'Click to add physical features'}
-            {suggestionState.category === 'attribute' && 'Click to add distinctive attributes'}
-          </p>
         </div>
       </div>
     </div>
