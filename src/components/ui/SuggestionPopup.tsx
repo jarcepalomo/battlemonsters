@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Sparkles, ChevronRight } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { 
   getRandomCharacterTypes, 
   getRandomPhysicalFeatures, 
@@ -162,17 +162,11 @@ export function SuggestionPopup({ isVisible, currentText, onSuggestionClick, onC
     <div className="absolute bottom-full left-0 right-0 mb-2 z-50">
       <div className="bg-gray-900/95 backdrop-blur-sm border border-purple-500/30 rounded-lg shadow-2xl p-4 animate-in slide-in-from-bottom-2 duration-200">
         {/* Header */}
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <span className="text-lg">{getCategoryIcon()}</span>
-            <h3 className="text-sm font-semibold text-purple-200">
-              {getCategoryTitle()}
-            </h3>
-          </div>
-          <div className="flex items-center gap-1 text-xs text-purple-400">
-            <Sparkles className="w-3 h-3" />
-            <span>Enhance</span>
-          </div>
+        <div className="flex items-center gap-2 mb-3">
+          <span className="text-lg">{getCategoryIcon()}</span>
+          <h3 className="text-sm font-semibold text-purple-200">
+            {getCategoryTitle()}
+          </h3>
         </div>
 
         {/* Suggestions */}

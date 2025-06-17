@@ -172,13 +172,6 @@ export function PromptInput({ selectedPrompt }: PromptInputProps) {
           onClose={handleCloseSuggestions}
         />
       </form>
-      
-      {/* Helpful hint */}
-      <div className="text-xs text-purple-400/70 text-center">
-        <span className="inline-flex items-center gap-1">
-          💡 Pro tip: Press <kbd className="px-1.5 py-0.5 bg-gray-700/50 rounded text-purple-300 font-mono text-xs">Ctrl</kbd> + <kbd className="px-1.5 py-0.5 bg-gray-700/50 rounded text-purple-300 font-mono text-xs">Enter</kbd> to submit
-        </span>
-      </div>
     </div>
   );
 }
