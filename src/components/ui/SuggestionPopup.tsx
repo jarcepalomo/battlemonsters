@@ -94,7 +94,11 @@ export function SuggestionPopup({ isVisible, currentText, onSuggestionClick, onC
     });
   }, [isVisible, currentText]);
 
-  const handleSuggestionClick = (suggestion: string) => {
+  const handleSuggestionClick = (e: React.MouseEvent, suggestion: string) => {
+    // Prevent any form submission or event bubbling
+    e.preventDefault();
+    e.stopPropagation();
+    
     let newText = currentText;
     
     if (suggestionState.category === 'character') {
@@ -170,7 +174,8 @@ export function SuggestionPopup({ isVisible, currentText, onSuggestionClick, onC
           {suggestionState.suggestions.map((suggestion, index) => (
             <button
               key={`${suggestionState.category}-${suggestion}-${index}`}
-              onClick={() => handleSuggestionClick(suggestion)}
+              type="button"
+              onClick={(e) => handleSuggestionClick(e, suggestion)}
               className="w-full text-left p-3 bg-gray-800/50 hover:bg-purple-900/30 border border-gray-700/50 hover:border-purple-500/40 rounded-lg transition-all duration-200 group"
             >
               <div className="flex items-center justify-between">
