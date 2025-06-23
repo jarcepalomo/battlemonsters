@@ -16,11 +16,12 @@ interface BattlePanel {
   description: string;
   prompt: string;
   aspectRatio?: string;
+  isPlaceholder?: boolean;
 }
 
 export function ComicBattleInterface() {
   const { state } = useGame();
-  const { character, opponent } = state;
+  const { character, opponent, demoMode } = state;
   
   const [battlePanels, setBattlePanels] = useState<BattlePanel[]>([]);
   const [customScene, setCustomScene] = useState('');
@@ -109,13 +110,23 @@ export function ComicBattleInterface() {
     // Add new panel with loading state
     const newPanel: BattlePanel = {
       id: panelId,
-      isGenerating: true,
+      isGenerating: !demoMode, // Don't show generating state in demo mode
       error: false,
       description: actionDescription,
-      prompt
+      prompt,
+      isPlaceholder: demoMode // Mark as placeholder in demo mode
     };
 
     setBattlePanels(prev => [...prev, newPanel]);
+
+    // In demo mode, just add placeholder and finish
+    if (demoMode) {
+      setIsGeneratingPanel(false);
+      if (isCustom) {
+        setCustomScene('');
+      }
+      return;
+    }
 
     try {
       const response = await fetch(
@@ -186,7 +197,7 @@ export function ComicBattleInterface() {
 
   const handleRetryPanel = (panelIndex: number) => {
     const panel = battlePanels[panelIndex];
-    if (panel) {
+    if (panel && !demoMode) { // Don't allow retry in demo mode
       generateBattlePanel(panel.description);
     }
   };
@@ -266,6 +277,11 @@ export function ComicBattleInterface() {
 
             <h3 className="text-2xl font-bold text-white text-center">
               Battle Comic Strip
+              {demoMode && (
+                <span className="ml-3 text-sm font-normal text-purple-300 bg-purple-900/30 px-3 py-1 rounded-full border border-purple-500/30">
+                  Demo Mode
+                </span>
+              )}
             </h3>
             
             {/* Finalize Button - Right Side */}
@@ -294,7 +310,12 @@ export function ComicBattleInterface() {
                   <div className="text-center">
                     <div className="text-6xl mb-4">🎬</div>
                     <p className="text-xl text-purple-300 mb-2">Ready to Create Your Epic Battle Story?</p>
-                    <p className="text-purple-400">Use the controls below to generate your first comic panel!</p>
+                    <p className="text-purple-400">
+                      {demoMode 
+                        ? 'Use the controls below to add placeholder panels to your comic!'
+                        : 'Use the controls below to generate your first comic panel!'
+                      }
+                    </p>
                   </div>
                 </div>
               ) : (
@@ -316,6 +337,7 @@ export function ComicBattleInterface() {
                               index={globalIndex}
                               onRetry={() => handleRetryPanel(globalIndex)}
                               width="w-full"
+                              demoMode={demoMode}
                             />
                           </div>
                         );
