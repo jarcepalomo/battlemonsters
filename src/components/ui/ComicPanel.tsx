@@ -20,11 +20,6 @@ interface ComicPanelProps {
 export function ComicPanel({ panel, index, onRetry }: ComicPanelProps) {
   return (
     <div className="relative">
-      {/* Panel Number Badge */}
-      <div className="absolute -top-3 -left-3 z-10 bg-gradient-to-r from-purple-600 to-pink-600 text-white w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border-2 border-white shadow-lg">
-        {index + 1}
-      </div>
-
       {/* Comic Panel */}
       <div className="bg-gray-800/50 rounded-xl border-4 border-purple-500/30 overflow-hidden shadow-xl aspect-video relative">
         {panel.isGenerating ? (
