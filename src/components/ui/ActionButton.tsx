@@ -16,12 +16,12 @@ export function ActionButton({ action, onClick, onRefresh, disabled }: ActionBut
   const getActionIcon = (label: string) => {
     const lowerLabel = label.toLowerCase();
     if (lowerLabel.includes('strike') || lowerLabel.includes('slash') || lowerLabel.includes('punch')) {
-      return <Sword className="w-5 h-5" />;
+      return <Sword className="w-4 h-4" />;
     }
     if (lowerLabel.includes('shield') || lowerLabel.includes('barrier') || lowerLabel.includes('defense')) {
-      return <Shield className="w-5 h-5" />;
+      return <Shield className="w-4 h-4" />;
     }
-    return <Zap className="w-5 h-5" />;
+    return <Zap className="w-4 h-4" />;
   };
 
   const handleRefresh = (e: React.MouseEvent) => {
@@ -45,16 +45,20 @@ export function ActionButton({ action, onClick, onRefresh, disabled }: ActionBut
           <div className="absolute inset-0 bg-gradient-to-r from-purple-600/10 to-pink-600/10 rounded-xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
         )}
         
-        <div className="relative flex flex-col items-center text-center">
-          <div className={`mb-3 p-3 rounded-full ${
-            disabled 
-              ? 'bg-gray-700/50' 
-              : 'bg-gradient-to-r from-purple-600 to-pink-600 group-hover:from-purple-500 group-hover:to-pink-500'
-          }`}>
-            {getActionIcon(action.label)}
+        <div className="relative text-left">
+          {/* Icon and Title Row */}
+          <div className="flex items-center gap-3 mb-3">
+            <div className={`p-2 rounded-full ${
+              disabled 
+                ? 'bg-gray-700/50' 
+                : 'bg-gradient-to-r from-purple-600 to-pink-600 group-hover:from-purple-500 group-hover:to-pink-500'
+            }`}>
+              {getActionIcon(action.label)}
+            </div>
+            <h5 className="font-bold text-base">{action.label}</h5>
           </div>
           
-          <h5 className="font-bold text-lg mb-2">{action.label}</h5>
+          {/* Description */}
           <p className="text-sm opacity-80 leading-relaxed">{action.description}</p>
         </div>
       </button>

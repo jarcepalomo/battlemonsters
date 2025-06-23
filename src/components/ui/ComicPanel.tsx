@@ -1,5 +1,5 @@
 import React from 'react';
-import { Loader2, AlertCircle, RefreshCw, Zap, Image } from 'lucide-react';
+import { Loader2, AlertCircle, RefreshCw, Zap, Image, Sword, Skull } from 'lucide-react';
 
 interface BattlePanelData {
   id: string;
@@ -10,6 +10,7 @@ interface BattlePanelData {
   prompt: string;
   aspectRatio?: string;
   isPlaceholder?: boolean;
+  isVillainAction?: boolean;
 }
 
 interface ComicPanelProps {
@@ -22,14 +23,22 @@ interface ComicPanelProps {
 export function ComicPanel({ panel, index, onRetry, demoMode = false }: ComicPanelProps) {
   return (
     <div className="h-full flex flex-col">
+      {/* Panel Number Badge */}
+      <div className="absolute -top-3 -left-3 z-10 bg-gradient-to-r from-purple-600 to-pink-600 text-white w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border-2 border-white shadow-lg">
+        {index + 1}
+      </div>
+
       {/* Comic Panel - Takes most of the height */}
       <div className="flex-1 bg-gray-800/50 rounded-t-xl border-4 border-b-0 border-purple-500/30 overflow-hidden shadow-xl relative">
         {panel.isPlaceholder ? (
           // Demo Mode Placeholder
           <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-purple-900/20 to-pink-900/20">
-            <Image className="w-16 h-16 text-purple-400 mb-4" />
+            {panel.isVillainAction ? <Skull className="w-16 h-16 text-red-400 mb-4" /> : <Sword className="w-16 h-16 text-purple-400 mb-4" />}
             <p className="text-purple-300 text-center px-4 font-medium text-lg">
               Demo Panel #{index + 1}
+            </p>
+            <p className="text-purple-400 text-center px-4 text-sm mt-2">
+              {panel.isVillainAction ? 'Villain Action' : 'Hero Action'}
             </p>
           </div>
         ) : panel.isGenerating ? (
@@ -68,6 +77,14 @@ export function ComicPanel({ panel, index, onRetry, demoMode = false }: ComicPan
             />
             {/* Comic-style border effect */}
             <div className="absolute inset-0 border-4 border-white/20 rounded-t-lg pointer-events-none"></div>
+            
+            {/* Action Type Indicator */}
+            {panel.isVillainAction && (
+              <div className="absolute top-2 right-2 bg-red-600/80 text-white px-2 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+                <Skull className="w-3 h-3" />
+                Villain
+              </div>
+            )}
           </>
         ) : null}
       </div>
