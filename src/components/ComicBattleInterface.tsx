@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ChevronUp, ChevronDown, Wand2, RotateCcw } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { CharacterPortrait } from './ui/CharacterPortrait';
@@ -7,6 +7,7 @@ import { ActionButton } from './ui/ActionButton';
 import { CustomSceneInput } from './ui/CustomSceneInput';
 import { FinalizeButton } from './ui/FinalizeButton';
 import { RestartModal } from './ui/RestartModal';
+import { RegenerateCharacterModal } from './ui/RegenerateCharacterModal';
 
 interface BattlePanel {
   id: string;
@@ -28,7 +29,7 @@ const LAYOUT_PATTERNS = [
 ];
 
 export function ComicBattleInterface() {
-  const { state } = useGame();
+  const { state, dispatch } = useGame();
   const { character, opponent, demoMode } = state;
   
   const [battlePanels, setBattlePanels] = useState<BattlePanel[]>([]);
@@ -37,6 +38,11 @@ export function ComicBattleInterface() {
   const [suggestedActions, setSuggestedActions] = useState<Array<{ label: string; description: string }>>([]);
   const [isControlsExpanded, setIsControlsExpanded] = useState(true);
   const [showRestartModal, setShowRestartModal] = useState(false);
+  const [showRegenerateModal, setShowRegenerateModal] = useState(false);
+  const [regenerateTarget, setRegenerateTarget] = useState<'hero' | 'villain' | null>(null);
+  
+  // Ref for the scrollable comic panels container
+  const comicScrollRef = useRef<HTMLDivElement>(null);
 
   // Initialize suggested actions when character is available
   useEffect(() => {
@@ -48,6 +54,17 @@ export function ComicBattleInterface() {
       setSuggestedActions(initialActions);
     }
   }, [character]);
+
+  // Auto-scroll to bottom when new panels are added
+  useEffect(() => {
+    if (comicScrollRef.current && battlePanels.length > 0) {
+      const scrollContainer = comicScrollRef.current;
+      scrollContainer.scrollTo({
+        top: scrollContainer.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
+  }, [battlePanels.length]); // Only trigger when panel count changes
 
   // Function to get a new random action from character powers
   const getRandomAction = (excludeIndex?: number) => {
@@ -217,6 +234,30 @@ export function ComicBattleInterface() {
     setShowRestartModal(false);
   };
 
+  const handleRegenerateCharacter = (target: 'hero' | 'villain') => {
+    setRegenerateTarget(target);
+    setShowRegenerateModal(true);
+  };
+
+  const handleCharacterRegenerated = (newCharacter: any) => {
+    if (regenerateTarget === 'hero') {
+      dispatch({ type: 'SET_CHARACTER', payload: newCharacter });
+      // Reset suggested actions with new character's powers
+      if (newCharacter.powers) {
+        const newActions = newCharacter.powers.slice(0, 3).map((power: any) => ({
+          label: power.name,
+          description: power.description
+        }));
+        setSuggestedActions(newActions);
+      }
+    } else if (regenerateTarget === 'villain') {
+      dispatch({ type: 'SET_OPPONENT', payload: newCharacter });
+    }
+    
+    setShowRegenerateModal(false);
+    setRegenerateTarget(null);
+  };
+
   if (!character || !opponent) return null;
 
   const panelRows = groupPanelsIntoRows(battlePanels);
@@ -251,9 +292,18 @@ export function ComicBattleInterface() {
             <h2 className="text-2xl font-bold text-white text-center mb-4">
               {character.character_name}
             </h2>
-            <p className="text-purple-200 text-sm text-center leading-relaxed">
+            <p className="text-purple-200 text-sm text-center leading-relaxed mb-6">
               {character.description}
             </p>
+            
+            {/* Regenerate Hero Button */}
+            <button
+              onClick={() => handleRegenerateCharacter('hero')}
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600/20 to-pink-600/20 hover:from-purple-600/30 hover:to-pink-600/30 border border-purple-500/30 hover:border-purple-400/50 text-purple-300 hover:text-purple-200 rounded-lg transition-all duration-200 font-medium"
+            >
+              <RotateCcw className="w-4 h-4" />
+              Regenerate
+            </button>
           </div>
         </div>
 
@@ -307,7 +357,7 @@ export function ComicBattleInterface() {
           <div className="flex-1 flex flex-col overflow-hidden">
             
             {/* Scrollable Comic Panels */}
-            <div className="flex-1 overflow-y-auto p-6">
+            <div ref={comicScrollRef} className="flex-1 overflow-y-auto p-6">
               {battlePanels.length === 0 ? (
                 <div className="h-full flex items-center justify-center">
                   <div className="text-center">
@@ -429,9 +479,18 @@ export function ComicBattleInterface() {
             <h2 className="text-2xl font-bold text-white text-center mb-4">
               {opponent.character_name}
             </h2>
-            <p className="text-red-200 text-sm text-center leading-relaxed">
+            <p className="text-red-200 text-sm text-center leading-relaxed mb-6">
               {opponent.description}
             </p>
+            
+            {/* Regenerate Villain Button */}
+            <button
+              onClick={() => handleRegenerateCharacter('villain')}
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-600/20 to-orange-600/20 hover:from-red-600/30 hover:to-orange-600/30 border border-red-500/30 hover:border-red-400/50 text-red-300 hover:text-red-200 rounded-lg transition-all duration-200 font-medium"
+            >
+              <RotateCcw className="w-4 h-4" />
+              Regenerate
+            </button>
           </div>
         </div>
       </div>
@@ -441,6 +500,18 @@ export function ComicBattleInterface() {
         isOpen={showRestartModal}
         onClose={() => setShowRestartModal(false)}
         onConfirm={handleRestartComic}
+      />
+
+      {/* Regenerate Character Modal */}
+      <RegenerateCharacterModal
+        isOpen={showRegenerateModal}
+        onClose={() => {
+          setShowRegenerateModal(false);
+          setRegenerateTarget(null);
+        }}
+        onCharacterGenerated={handleCharacterRegenerated}
+        targetType={regenerateTarget}
+        demoMode={demoMode}
       />
     </div>
   );
