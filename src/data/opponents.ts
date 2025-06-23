@@ -2,7 +2,7 @@ import type { Opponent } from '../types/game';
 
 export const SHADOW_REAPER: Opponent = {
   character_name: "Shadow Reaper",
-  description: "A dark entity from the void realm, wielding ancient necromantic powers and feeding on the life force of its enemies.",
+  description: "A dark entity from the void realm, wielding ancient necromantic powers and feeding on the life force of its enemies with supernatural hunger.",
   hp: 120,
   energy: 100,
   mana: 85,
@@ -35,7 +35,7 @@ export const SHADOW_REAPER: Opponent = {
 
 export const CRYSTAL_GOLEM: Opponent = {
   character_name: "Crystal Golem",
-  description: "An ancient construct made of living crystal, powered by elemental magic and nearly indestructible armor plating.",
+  description: "An ancient construct made of living crystal, powered by elemental magic and nearly indestructible armor plating that gleams with mystical energy.",
   hp: 150,
   energy: 80,
   mana: 60,
@@ -68,7 +68,7 @@ export const CRYSTAL_GOLEM: Opponent = {
 
 export const FLAME_PHOENIX: Opponent = {
   character_name: "Flame Phoenix",
-  description: "A majestic fire bird reborn from eternal flames, wielding devastating fire magic and the power of resurrection.",
+  description: "A majestic fire bird reborn from eternal flames, wielding devastating fire magic and the power of resurrection with wings of pure flame.",
   hp: 110,
   energy: 120,
   mana: 95,
@@ -101,7 +101,7 @@ export const FLAME_PHOENIX: Opponent = {
 
 export const ICE_WITCH: Opponent = {
   character_name: "Ice Witch",
-  description: "A sorceress of the frozen wastes, master of ice magic and winter storms, with a heart as cold as her spells.",
+  description: "A sorceress of the frozen wastes, master of ice magic and winter storms, with a heart as cold as her spells and eyes like glacial ice.",
   hp: 95,
   energy: 110,
   mana: 100,
@@ -134,7 +134,7 @@ export const ICE_WITCH: Opponent = {
 
 export const STORM_DRAGON: Opponent = {
   character_name: "Storm Dragon",
-  description: "An ancient dragon lord of the skies, commanding lightning and thunder with devastating aerial attacks.",
+  description: "An ancient dragon lord of the skies, commanding lightning and thunder with devastating aerial attacks and scales crackling with electric energy.",
   hp: 140,
   energy: 90,
   mana: 85,
@@ -167,7 +167,7 @@ export const STORM_DRAGON: Opponent = {
 
 export const VOID_ASSASSIN: Opponent = {
   character_name: "Void Assassin",
-  description: "A master of stealth and shadow magic, striking from the darkness with lethal precision and otherworldly speed.",
+  description: "A master of stealth and shadow magic, striking from the darkness with lethal precision and otherworldly speed that defies mortal comprehension.",
   hp: 85,
   energy: 130,
   mana: 75,
