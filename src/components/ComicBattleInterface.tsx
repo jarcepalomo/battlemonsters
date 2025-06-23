@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronUp, ChevronDown, Wand2 } from 'lucide-react';
+import { ChevronUp, ChevronDown, Wand2, RotateCcw } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { CharacterPortrait } from './ui/CharacterPortrait';
 import { ComicPanel } from './ui/ComicPanel';
 import { ActionButton } from './ui/ActionButton';
 import { CustomSceneInput } from './ui/CustomSceneInput';
 import { FinalizeButton } from './ui/FinalizeButton';
+import { RestartModal } from './ui/RestartModal';
 
 interface BattlePanel {
   id: string;
@@ -26,6 +27,7 @@ export function ComicBattleInterface() {
   const [isGeneratingPanel, setIsGeneratingPanel] = useState(false);
   const [suggestedActions, setSuggestedActions] = useState<Array<{ label: string; description: string }>>([]);
   const [isControlsExpanded, setIsControlsExpanded] = useState(true);
+  const [showRestartModal, setShowRestartModal] = useState(false);
 
   // Initialize suggested actions when character is available
   useEffect(() => {
@@ -62,6 +64,34 @@ export function ComicBattleInterface() {
         return newActions;
       });
     }
+  };
+
+  // Function to generate random widths for 3 columns that sum to 100%
+  const generateRandomWidths = () => {
+    // Generate two random split points between 20% and 80%
+    const split1 = 20 + Math.random() * 40; // 20-60%
+    const split2 = split1 + (20 + Math.random() * (60 - split1)); // Ensure remaining space is reasonable
+    
+    const width1 = Math.round(split1);
+    const width2 = Math.round(split2 - split1);
+    const width3 = 100 - width1 - width2;
+    
+    return [width1, width2, width3];
+  };
+
+  // Function to group panels into rows of 3 with random widths
+  const groupPanelsIntoRows = (panels: BattlePanel[]) => {
+    const rows = [];
+    for (let i = 0; i < panels.length; i += 3) {
+      const rowPanels = panels.slice(i, i + 3);
+      const widths = generateRandomWidths();
+      
+      rows.push({
+        panels: rowPanels,
+        widths: widths.slice(0, rowPanels.length) // Only use as many widths as we have panels
+      });
+    }
+    return rows;
   };
 
   const generateBattlePanel = async (actionDescription: string, isCustom: boolean = false) => {
@@ -167,7 +197,15 @@ export function ComicBattleInterface() {
     generateBattlePanel(finalDescription);
   };
 
+  const handleRestartComic = () => {
+    setBattlePanels([]);
+    setCustomScene('');
+    setShowRestartModal(false);
+  };
+
   if (!character || !opponent) return null;
+
+  const panelRows = groupPanelsIntoRows(battlePanels);
 
   return (
     <div className="h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 flex flex-col">
@@ -208,11 +246,29 @@ export function ComicBattleInterface() {
         {/* Central Comic Strip Area */}
         <div className="flex-1 flex flex-col">
           <div className="bg-gray-900/50 backdrop-blur-sm border-b border-purple-500/20 p-4 flex items-center justify-center relative">
+            
+            {/* Restart Button - Left Side */}
+            <div className="absolute left-4">
+              <button
+                onClick={() => setShowRestartModal(true)}
+                disabled={battlePanels.length === 0}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-300 ${
+                  battlePanels.length === 0
+                    ? 'bg-gray-800/30 border border-gray-600/30 text-gray-500 cursor-not-allowed' 
+                    : 'bg-gradient-to-r from-red-600/20 to-orange-600/20 hover:from-red-600/30 hover:to-orange-600/30 text-red-300 hover:text-red-200 border border-red-500/30 hover:border-red-400/50'
+                }`}
+                title="Restart comic strip"
+              >
+                <RotateCcw className="w-4 h-4" />
+                Restart
+              </button>
+            </div>
+
             <h3 className="text-2xl font-bold text-white text-center">
               Battle Comic Strip
             </h3>
             
-            {/* Finalize Button - Top Right */}
+            {/* Finalize Button - Right Side */}
             <div className="absolute right-4">
               <button
                 onClick={handleFinalizeBattle}
@@ -242,14 +298,29 @@ export function ComicBattleInterface() {
                   </div>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {battlePanels.map((panel, index) => (
-                    <ComicPanel
-                      key={panel.id}
-                      panel={panel}
-                      index={index}
-                      onRetry={() => handleRetryPanel(index)}
-                    />
+                <div className="space-y-6">
+                  {panelRows.map((row, rowIndex) => (
+                    <div key={rowIndex} className="flex gap-4">
+                      {row.panels.map((panel, panelIndex) => {
+                        const globalIndex = rowIndex * 3 + panelIndex;
+                        const widthClass = `w-[${row.widths[panelIndex]}%]`;
+                        
+                        return (
+                          <div 
+                            key={panel.id} 
+                            className={widthClass}
+                            style={{ width: `${row.widths[panelIndex]}%` }}
+                          >
+                            <ComicPanel
+                              panel={panel}
+                              index={globalIndex}
+                              onRetry={() => handleRetryPanel(globalIndex)}
+                              width="w-full"
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
                   ))}
                 </div>
               )}
@@ -341,6 +412,13 @@ export function ComicBattleInterface() {
           </div>
         </div>
       </div>
+
+      {/* Restart Confirmation Modal */}
+      <RestartModal
+        isOpen={showRestartModal}
+        onClose={() => setShowRestartModal(false)}
+        onConfirm={handleRestartComic}
+      />
     </div>
   );
 }

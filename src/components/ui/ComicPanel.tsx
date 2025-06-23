@@ -15,11 +15,12 @@ interface ComicPanelProps {
   panel: BattlePanelData;
   index: number;
   onRetry: () => void;
+  width?: string;
 }
 
-export function ComicPanel({ panel, index, onRetry }: ComicPanelProps) {
+export function ComicPanel({ panel, index, onRetry, width = 'w-full' }: ComicPanelProps) {
   return (
-    <div className="relative">
+    <div className={`relative ${width}`}>
       {/* Comic Panel */}
       <div className="bg-gray-800/50 rounded-xl border-4 border-purple-500/30 overflow-hidden shadow-xl aspect-video relative">
         {panel.isGenerating ? (
