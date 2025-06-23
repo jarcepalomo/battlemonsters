@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Swords, AlertCircle } from 'lucide-react';
 import { PromptInput } from './PromptInput';
 import { ExamplePrompts } from './ui/ExamplePrompts';
+import { DemoModeToggle } from './ui/DemoModeToggle';
 import { useGame } from '../context/GameContext';
 import { BattleScreen } from './BattleScreen';
 
@@ -31,6 +32,18 @@ export function CharacterCreation() {
         </p>
       </div>
       
+      {/* Demo Mode Toggle */}
+      <div className="mb-6">
+        <DemoModeToggle />
+        {state.demoMode && (
+          <div className="mt-3 p-3 bg-purple-900/20 border border-purple-500/30 rounded-lg">
+            <p className="text-sm text-purple-300 text-center">
+              <strong>Demo Mode Active:</strong> Using predefined characters - Phoenix Warrior vs Time Manipulator
+            </p>
+          </div>
+        )}
+      </div>
+      
       <div className="bg-gray-900/50 backdrop-blur-sm p-8 rounded-2xl border border-purple-500/20 shadow-2xl">
         {state.error && (
           <div className="mb-6 p-4 bg-red-900/50 border border-red-500/50 rounded-lg flex items-center gap-3 text-red-200 backdrop-blur-sm">
@@ -41,7 +54,9 @@ export function CharacterCreation() {
         
         <PromptInput selectedPrompt={selectedPrompt} />
         
-        <ExamplePrompts onPromptSelect={handlePromptSelect} />
+        {!state.demoMode && (
+          <ExamplePrompts onPromptSelect={handlePromptSelect} />
+        )}
       </div>
       
       {/* Decorative elements */}

@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Send, Wand2 } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { SuggestionPopup } from './ui/SuggestionPopup';
+import { DEMO_PHOENIX_WARRIOR, DEMO_TIME_MANIPULATOR } from '../data/demoCharacters';
 
 interface PromptInputProps {
   selectedPrompt?: string;
@@ -11,7 +12,7 @@ export function PromptInput({ selectedPrompt }: PromptInputProps) {
   const [prompt, setPrompt] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const { dispatch } = useGame();
+  const { state, dispatch } = useGame();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -66,6 +67,22 @@ export function PromptInput({ selectedPrompt }: PromptInputProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Handle demo mode
+    if (state.demoMode) {
+      dispatch({ type: 'SET_LOADING', payload: true });
+      
+      // Simulate loading delay for better UX
+      setTimeout(() => {
+        dispatch({ type: 'SET_CHARACTER', payload: DEMO_PHOENIX_WARRIOR });
+        dispatch({ type: 'SET_OPPONENT', payload: DEMO_TIME_MANIPULATOR });
+        dispatch({ type: 'SET_LOADING', payload: false });
+      }, 1500);
+      
+      return;
+    }
+
+    // Regular mode - require prompt
     if (!prompt.trim()) return;
 
     setShowSuggestions(false);
@@ -113,8 +130,10 @@ export function PromptInput({ selectedPrompt }: PromptInputProps) {
   };
 
   const handleFocus = () => {
-    setIsFocused(true);
-    setShowSuggestions(true);
+    if (!state.demoMode) {
+      setIsFocused(true);
+      setShowSuggestions(true);
+    }
   };
 
   const handleSuggestionClick = (suggestion: string) => {
@@ -132,6 +151,27 @@ export function PromptInput({ selectedPrompt }: PromptInputProps) {
     setShowSuggestions(false);
   };
 
+  const getButtonText = () => {
+    if (state.demoMode) {
+      return 'Start Demo Battle';
+    }
+    return 'Create Character';
+  };
+
+  const getPlaceholderText = () => {
+    if (state.demoMode) {
+      return 'Demo mode active - click to start battle with predefined characters';
+    }
+    return 'Describe your legendary character...';
+  };
+
+  const isSubmitDisabled = () => {
+    if (state.demoMode) {
+      return false; // Always allow demo mode submission
+    }
+    return !prompt.trim(); // Regular mode requires prompt
+  };
+
   return (
     <div ref={containerRef} className="space-y-4 relative">
       <form onSubmit={handleSubmit} className="relative group">
@@ -146,8 +186,13 @@ export function PromptInput({ selectedPrompt }: PromptInputProps) {
             onChange={(e) => setPrompt(e.target.value)}
             onKeyDown={handleKeyDown}
             onFocus={handleFocus}
-            placeholder="Describe your legendary character..."
-            className="w-full pl-12 pr-12 py-3.5 bg-gray-800/50 border border-purple-500/30 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 backdrop-blur-sm resize-none leading-6"
+            placeholder={getPlaceholderText()}
+            disabled={state.demoMode}
+            className={`w-full pl-12 pr-12 py-3.5 border border-purple-500/30 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 backdrop-blur-sm resize-none leading-6 ${
+              state.demoMode 
+                ? 'bg-gray-800/30 cursor-not-allowed' 
+                : 'bg-gray-800/50'
+            }`}
             style={{ 
               minHeight: '56px',
               maxHeight: '146px'
@@ -156,21 +201,23 @@ export function PromptInput({ selectedPrompt }: PromptInputProps) {
           />
           <button
             type="submit"
-            disabled={!prompt.trim()}
+            disabled={isSubmitDisabled()}
             className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-md bg-gradient-to-r from-purple-600 to-pink-600 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:from-purple-500 hover:to-pink-500 transition-all duration-200 shadow-lg hover:shadow-purple-500/25 z-10"
-            title="Submit (Ctrl/Cmd + Enter)"
+            title={state.demoMode ? "Start Demo" : "Submit (Ctrl/Cmd + Enter)"}
           >
             <Send className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Suggestion Popup */}
-        <SuggestionPopup
-          isVisible={showSuggestions && isFocused}
-          currentText={prompt}
-          onSuggestionClick={handleSuggestionClick}
-          onClose={handleCloseSuggestions}
-        />
+        {/* Suggestion Popup - Only show in regular mode */}
+        {!state.demoMode && (
+          <SuggestionPopup
+            isVisible={showSuggestions && isFocused}
+            currentText={prompt}
+            onSuggestionClick={handleSuggestionClick}
+            onClose={handleCloseSuggestions}
+          />
+        )}
       </form>
     </div>
   );

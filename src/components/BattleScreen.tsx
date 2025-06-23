@@ -6,24 +6,34 @@ import { PowersList } from './ui/PowersList';
 import { BattleHeader } from './ui/BattleHeader';
 import { VSSection } from './ui/VSSection';
 import { getRandomOpponent } from '../data/opponents';
+import { DEMO_TIME_MANIPULATOR } from '../data/demoCharacters';
 
 export function BattleScreen() {
   const { state, dispatch } = useGame();
-  const { character, opponent, isGeneratingImage, imageGenerationError, selectedPower } = state;
+  const { character, opponent, isGeneratingImage, imageGenerationError, selectedPower, demoMode } = state;
   const imageGenerationAttempted = useRef(false);
   const opponentSelected = useRef(false);
 
-  // Select random opponent when character is created
+  // Select opponent when character is created
   useEffect(() => {
     if (character && !opponent && !opponentSelected.current) {
       opponentSelected.current = true;
-      const randomOpponent = getRandomOpponent();
-      dispatch({ type: 'SET_OPPONENT', payload: randomOpponent });
+      
+      if (demoMode) {
+        // Use demo opponent
+        dispatch({ type: 'SET_OPPONENT', payload: DEMO_TIME_MANIPULATOR });
+      } else {
+        // Use random opponent
+        const randomOpponent = getRandomOpponent();
+        dispatch({ type: 'SET_OPPONENT', payload: randomOpponent });
+      }
     }
-  }, [character, opponent, dispatch]);
+  }, [character, opponent, demoMode, dispatch]);
 
-  // Image generation effect
+  // Image generation effect - Skip for demo mode
   useEffect(() => {
+    if (demoMode) return; // Skip image generation in demo mode
+    
     if (character && !character.image_url && !isGeneratingImage && !imageGenerationError && !imageGenerationAttempted.current) {
       imageGenerationAttempted.current = true;
       const generateImage = async () => {
@@ -60,7 +70,7 @@ export function BattleScreen() {
 
       generateImage();
     }
-  }, [character, isGeneratingImage, imageGenerationError, dispatch]);
+  }, [character, isGeneratingImage, imageGenerationError, demoMode, dispatch]);
 
   // If a power is selected, show the battle story screen
   if (selectedPower !== undefined) {
@@ -78,12 +88,34 @@ export function BattleScreen() {
     dispatch({ type: 'SET_IMAGE_GENERATION_ERROR', payload: false });
   };
 
+  const getBattleTitle = () => {
+    if (demoMode) {
+      return "Demo Battle Arena";
+    }
+    return "Battle Arena";
+  };
+
+  const getBattleSubtitle = () => {
+    if (demoMode) {
+      return "Experience the epic clash between Phoenix Warrior and Time Manipulator!";
+    }
+    return "Choose your attack to begin the battle!";
+  };
+
   return (
     <div className="w-full max-w-7xl mx-auto px-4 py-8">
       <BattleHeader 
-        title="Battle Arena" 
-        subtitle="Choose your attack to begin the battle!" 
+        title={getBattleTitle()} 
+        subtitle={getBattleSubtitle()} 
       />
+
+      {demoMode && (
+        <div className="mb-6 p-4 bg-purple-900/20 border border-purple-500/30 rounded-lg text-center">
+          <p className="text-purple-300">
+            <strong>Demo Mode:</strong> Showcasing predefined characters with preset abilities and images
+          </p>
+        </div>
+      )}
 
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Player Character */}
@@ -92,8 +124,8 @@ export function BattleScreen() {
           <CharacterCard 
             character={character}
             isPlayer={true}
-            isGeneratingImage={isGeneratingImage}
-            imageGenerationError={imageGenerationError}
+            isGeneratingImage={!demoMode && isGeneratingImage}
+            imageGenerationError={!demoMode && imageGenerationError}
             onRetryImageGeneration={handleRetryImageGeneration}
           />
         </div>
