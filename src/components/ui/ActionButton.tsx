@@ -1,0 +1,55 @@
+import React from 'react';
+import { Sword, Zap, Shield } from 'lucide-react';
+
+interface ActionButtonProps {
+  action: {
+    label: string;
+    description: string;
+  };
+  onClick: () => void;
+  disabled: boolean;
+}
+
+export function ActionButton({ action, onClick, disabled }: ActionButtonProps) {
+  // Get icon based on action type
+  const getActionIcon = (label: string) => {
+    const lowerLabel = label.toLowerCase();
+    if (lowerLabel.includes('strike') || lowerLabel.includes('slash') || lowerLabel.includes('punch')) {
+      return <Sword className="w-5 h-5" />;
+    }
+    if (lowerLabel.includes('shield') || lowerLabel.includes('barrier') || lowerLabel.includes('defense')) {
+      return <Shield className="w-5 h-5" />;
+    }
+    return <Zap className="w-5 h-5" />;
+  };
+
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={`group relative p-4 rounded-xl border-2 transition-all duration-300 transform hover:scale-105 ${
+        disabled 
+          ? 'bg-gray-800/30 border-gray-600/30 text-gray-500 cursor-not-allowed' 
+          : 'bg-gradient-to-br from-purple-600/20 to-pink-600/20 border-purple-500/40 hover:border-purple-400/60 text-white hover:shadow-lg hover:shadow-purple-500/25'
+      }`}
+    >
+      {/* Background glow effect */}
+      {!disabled && (
+        <div className="absolute inset-0 bg-gradient-to-r from-purple-600/10 to-pink-600/10 rounded-xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+      )}
+      
+      <div className="relative flex flex-col items-center text-center">
+        <div className={`mb-3 p-3 rounded-full ${
+          disabled 
+            ? 'bg-gray-700/50' 
+            : 'bg-gradient-to-r from-purple-600 to-pink-600 group-hover:from-purple-500 group-hover:to-pink-500'
+        }`}>
+          {getActionIcon(action.label)}
+        </div>
+        
+        <h5 className="font-bold text-lg mb-2">{action.label}</h5>
+        <p className="text-sm opacity-80 leading-relaxed">{action.description}</p>
+      </div>
+    </button>
+  );
+}

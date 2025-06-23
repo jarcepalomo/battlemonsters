@@ -1,14 +1,13 @@
 import React from 'react';
 import { BookOpen } from 'lucide-react';
-import type { Power } from '../../types/game';
 
 interface PowersListProps {
-  powers: Power[];
+  powers: any[];
   onPowerSelect: (powerIndex: number) => void;
   disabled?: boolean;
 }
 
-export function PowersList({ powers, onPowerSelect, disabled = false }: PowersListProps) {
+export function PowersList({ onPowerSelect, disabled = false }: PowersListProps) {
   const handleCreateComic = () => {
     // Use the first power as default for comic creation
     onPowerSelect(0);
