@@ -176,7 +176,7 @@ export function ComicBattleInterface() {
       <div className="flex-1 flex overflow-hidden">
         
         {/* Left Sidepanel - Hero */}
-        <div className="w-80 bg-gray-900/50 backdrop-blur-sm border-r border-purple-500/20 p-6 flex flex-col">
+        <div className="w-80 bg-gray-900/50 backdrop-blur-sm border-r border-purple-500/20 p-6 flex flex-col justify-center">
           <div className="flex flex-col items-center">
             <div className="relative mb-4">
               <div className="w-48 h-48 rounded-xl overflow-hidden border-4 border-purple-500/50 shadow-2xl">
@@ -207,17 +207,13 @@ export function ComicBattleInterface() {
 
         {/* Central Comic Strip Area */}
         <div className="flex-1 flex flex-col">
-          <div className="bg-gray-900/50 backdrop-blur-sm border-b border-purple-500/20 p-4 flex items-center justify-between">
-            <div className="flex-1 flex items-center justify-center">
-              <h3 className="text-2xl font-bold text-white flex items-center gap-3">
-                <span className="text-3xl">📚</span>
-                Battle Comic Strip
-                <span className="text-3xl">⚡</span>
-              </h3>
-            </div>
+          <div className="bg-gray-900/50 backdrop-blur-sm border-b border-purple-500/20 p-4 flex items-center justify-center relative">
+            <h3 className="text-2xl font-bold text-white text-center">
+              Battle Comic Strip
+            </h3>
             
             {/* Finalize Button - Top Right */}
-            <div className="ml-4">
+            <div className="absolute right-4">
               <button
                 onClick={handleFinalizeBattle}
                 disabled={isGeneratingPanel || battlePanels.length === 0}
@@ -316,7 +312,7 @@ export function ComicBattleInterface() {
         </div>
 
         {/* Right Sidepanel - Villain */}
-        <div className="w-80 bg-gray-900/50 backdrop-blur-sm border-l border-purple-500/20 p-6 flex flex-col">
+        <div className="w-80 bg-gray-900/50 backdrop-blur-sm border-l border-purple-500/20 p-6 flex flex-col justify-center">
           <div className="flex flex-col items-center">
             <div className="relative mb-4">
               <div className="w-48 h-48 rounded-xl overflow-hidden border-4 border-red-500/50 shadow-2xl">
