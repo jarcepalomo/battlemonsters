@@ -23,7 +23,7 @@ export function ComicPanel({ panel, index, onRetry, demoMode = false }: ComicPan
   return (
     <div className="h-full flex flex-col">
       {/* Comic Panel - Takes most of the height */}
-      <div className="flex-1 bg-gray-800/50 rounded-xl border-4 border-purple-500/30 overflow-hidden shadow-xl relative">
+      <div className="flex-1 bg-gray-800/50 rounded-t-xl border-4 border-b-0 border-purple-500/30 overflow-hidden shadow-xl relative">
         {panel.isPlaceholder ? (
           // Demo Mode Placeholder
           <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-purple-900/20 to-pink-900/20">
@@ -67,14 +67,14 @@ export function ComicPanel({ panel, index, onRetry, demoMode = false }: ComicPan
               className="w-full h-full object-cover"
             />
             {/* Comic-style border effect */}
-            <div className="absolute inset-0 border-4 border-white/20 rounded-lg pointer-events-none"></div>
+            <div className="absolute inset-0 border-4 border-white/20 rounded-t-lg pointer-events-none"></div>
           </>
         ) : null}
       </div>
 
-      {/* Panel Description - Attached to bottom */}
-      <div className="mt-2 p-2 bg-gray-800/30 rounded-lg border border-purple-500/20">
-        <p className="text-purple-200 text-xs text-center font-medium leading-relaxed line-clamp-2">
+      {/* Panel Description - Seamlessly attached to bottom with fixed height */}
+      <div className="h-16 p-2 bg-gray-800/30 rounded-b-xl border-4 border-t-0 border-purple-500/20 flex items-center justify-center">
+        <p className="text-purple-200 text-xs text-center font-medium leading-tight line-clamp-3 overflow-hidden">
           {panel.description}
         </p>
       </div>
