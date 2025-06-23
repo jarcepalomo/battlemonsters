@@ -40,6 +40,7 @@ export function ComicBattleInterface() {
   const [battlePanels, setBattlePanels] = useState<BattlePanel[]>([]);
   const [customScene, setCustomScene] = useState('');
   const [isGeneratingPanel, setIsGeneratingPanel] = useState(false);
+  const [isGeneratingVillainAction, setIsGeneratingVillainAction] = useState(false);
   const [suggestedActions, setSuggestedActions] = useState<Array<{ label: string; description: string }>>([]);
   const [isControlsExpanded, setIsControlsExpanded] = useState(true);
   const [showRestartModal, setShowRestartModal] = useState(false);
@@ -48,7 +49,6 @@ export function ComicBattleInterface() {
   const [currentPage, setCurrentPage] = useState(0);
   const [showReplaceModal, setShowReplaceModal] = useState(false);
   const [replaceModalTarget, setReplaceModalTarget] = useState<{ index: number; isVillainAction: boolean } | null>(null);
-  const [isGeneratingVillainAction, setIsGeneratingVillainAction] = useState(false);
   
   // Ref for the scrollable comic panels container
   const comicScrollRef = useRef<HTMLDivElement>(null);
@@ -578,7 +578,7 @@ export function ComicBattleInterface() {
             
             {/* Scrollable Comic Panels */}
             <div ref={comicScrollRef} className="flex-1 overflow-y-auto p-6">
-              {battlePanels.length === 0 ? (
+              {battlePanels.length === 0 && !isGeneratingVillainAction ? (
                 <div className="h-full flex items-center justify-center">
                   <div className="text-center">
                     <div className="text-6xl mb-4">🎬</div>
@@ -591,9 +591,10 @@ export function ComicBattleInterface() {
                     </p>
                   </div>
                 </div>
-              ) : currentPageData ? (
+              ) : (
                 <div className="space-y-6">
-                  {currentPageData.rows.map((row, rowIndex) => (
+                  {/* Show current page panels */}
+                  {currentPageData && currentPageData.rows.map((row, rowIndex) => (
                     <div key={`page-${currentPage}-row-${rowIndex}`} className="flex gap-4" style={{ height: '320px' }}>
                       {row.panels.map((panel, panelIndex) => {
                         const globalIndex = row.globalStartIndex + panelIndex;
@@ -630,7 +631,7 @@ export function ComicBattleInterface() {
                     </div>
                   )}
                 </div>
-              ) : null}
+              )}
             </div>
 
             {/* Battle Controls Section - Taking Space */}
