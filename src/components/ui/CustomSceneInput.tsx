@@ -1,5 +1,5 @@
 import React from 'react';
-import { Send, Wand2 } from 'lucide-react';
+import { Send } from 'lucide-react';
 
 interface CustomSceneInputProps {
   value: string;
@@ -25,14 +25,6 @@ export function CustomSceneInput({ value, onChange, onSubmit, disabled }: Custom
 
   return (
     <div className="relative">
-      <div className="text-center mb-3">
-        <h5 className="text-white font-semibold flex items-center justify-center gap-2">
-          <Wand2 className="w-5 h-5 text-purple-400" />
-          Create Custom Scene
-        </h5>
-        <p className="text-purple-300 text-sm mt-1">Describe your own epic battle moment</p>
-      </div>
-      
       <form onSubmit={handleSubmit} className="relative group">
         <div className="absolute inset-0 bg-gradient-to-r from-purple-600/20 to-pink-600/20 rounded-lg blur opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         <div className="relative">

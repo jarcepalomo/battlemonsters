@@ -23,14 +23,43 @@ export function ComicBattleInterface() {
   const [battlePanels, setBattlePanels] = useState<BattlePanel[]>([]);
   const [customScene, setCustomScene] = useState('');
   const [isGeneratingPanel, setIsGeneratingPanel] = useState(false);
+  const [suggestedActions, setSuggestedActions] = useState<Array<{ label: string; description: string }>>([]);
 
-  // Suggested actions based on character powers
-  const getSuggestedActions = () => {
-    if (!character?.powers) return [];
-    return character.powers.slice(0, 3).map(power => ({
-      label: power.name,
-      description: power.description
-    }));
+  // Initialize suggested actions when character is available
+  useEffect(() => {
+    if (character?.powers) {
+      const initialActions = character.powers.slice(0, 3).map(power => ({
+        label: power.name,
+        description: power.description
+      }));
+      setSuggestedActions(initialActions);
+    }
+  }, [character]);
+
+  // Function to get a new random action from character powers
+  const getRandomAction = (excludeIndex?: number) => {
+    if (!character?.powers) return null;
+    
+    const availablePowers = character.powers.filter((_, index) => index !== excludeIndex);
+    if (availablePowers.length === 0) return null;
+    
+    const randomPower = availablePowers[Math.floor(Math.random() * availablePowers.length)];
+    return {
+      label: randomPower.name,
+      description: randomPower.description
+    };
+  };
+
+  // Function to replace a specific action with a new random one
+  const replaceAction = (actionIndex: number) => {
+    const newAction = getRandomAction();
+    if (newAction) {
+      setSuggestedActions(prev => {
+        const newActions = [...prev];
+        newActions[actionIndex] = newAction;
+        return newActions;
+      });
+    }
   };
 
   const generateBattlePanel = async (actionDescription: string, isCustom: boolean = false) => {
@@ -111,8 +140,10 @@ export function ComicBattleInterface() {
     }
   };
 
-  const handleActionClick = (action: { label: string; description: string }) => {
+  const handleActionClick = (action: { label: string; description: string }, actionIndex: number) => {
     generateBattlePanel(action.description);
+    // Replace the clicked action with a new random one
+    replaceAction(actionIndex);
   };
 
   const handleCustomScene = () => {
@@ -135,8 +166,6 @@ export function ComicBattleInterface() {
   };
 
   if (!character || !opponent) return null;
-
-  const suggestedActions = getSuggestedActions();
 
   return (
     <div className="h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 flex flex-col">
@@ -176,12 +205,29 @@ export function ComicBattleInterface() {
 
         {/* Central Comic Strip Area */}
         <div className="flex-1 flex flex-col">
-          <div className="bg-gray-900/50 backdrop-blur-sm border-b border-purple-500/20 p-4">
-            <h3 className="text-2xl font-bold text-center text-white flex items-center justify-center gap-3">
-              <span className="text-3xl">📚</span>
-              Battle Comic Strip
-              <span className="text-3xl">⚡</span>
-            </h3>
+          <div className="bg-gray-900/50 backdrop-blur-sm border-b border-purple-500/20 p-4 flex items-center justify-between">
+            <div className="flex-1 flex items-center justify-center">
+              <h3 className="text-2xl font-bold text-white flex items-center gap-3">
+                <span className="text-3xl">📚</span>
+                Battle Comic Strip
+                <span className="text-3xl">⚡</span>
+              </h3>
+            </div>
+            
+            {/* Finalize Button - Top Right */}
+            <div className="ml-4">
+              <button
+                onClick={handleFinalizeBattle}
+                disabled={isGeneratingPanel || battlePanels.length === 0}
+                className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-300 ${
+                  isGeneratingPanel || battlePanels.length === 0
+                    ? 'bg-gray-800/30 border border-gray-600/30 text-gray-500 cursor-not-allowed' 
+                    : 'bg-gradient-to-r from-yellow-600 to-red-600 hover:from-yellow-500 hover:to-red-500 text-white shadow-lg hover:shadow-orange-500/25 border border-yellow-500/50'
+                }`}
+              >
+                Finalize Battle
+              </button>
+            </div>
           </div>
           
           {/* Scrollable Comic Panels */}
@@ -248,30 +294,22 @@ export function ComicBattleInterface() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             {suggestedActions.map((action, index) => (
               <ActionButton
-                key={index}
+                key={`${action.label}-${index}`}
                 action={action}
-                onClick={() => handleActionClick(action)}
+                onClick={() => handleActionClick(action, index)}
+                onRefresh={() => replaceAction(index)}
                 disabled={isGeneratingPanel}
               />
             ))}
           </div>
 
           {/* Custom Scene Input */}
-          <div className="mb-6">
+          <div>
             <CustomSceneInput
               value={customScene}
               onChange={setCustomScene}
               onSubmit={handleCustomScene}
               disabled={isGeneratingPanel}
-            />
-          </div>
-
-          {/* Finalize Button */}
-          <div className="text-center">
-            <FinalizeButton
-              onClick={handleFinalizeBattle}
-              disabled={isGeneratingPanel || battlePanels.length === 0}
-              panelCount={battlePanels.length}
             />
           </div>
         </div>
