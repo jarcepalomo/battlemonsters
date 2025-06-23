@@ -8,6 +8,8 @@ import { CustomSceneInput } from './ui/CustomSceneInput';
 import { FinalizeButton } from './ui/FinalizeButton';
 import { RestartModal } from './ui/RestartModal';
 import { RegenerateCharacterModal } from './ui/RegenerateCharacterModal';
+import { ReplaceActionModal } from './ui/ReplaceActionModal';
+import { SkeletonPanel } from './ui/SkeletonPanel';
 
 interface BattlePanel {
   id: string;
@@ -44,6 +46,9 @@ export function ComicBattleInterface() {
   const [showRegenerateModal, setShowRegenerateModal] = useState(false);
   const [regenerateTarget, setRegenerateTarget] = useState<'hero' | 'villain' | null>(null);
   const [currentPage, setCurrentPage] = useState(0);
+  const [showReplaceModal, setShowReplaceModal] = useState(false);
+  const [replaceModalTarget, setReplaceModalTarget] = useState<{ index: number; isVillainAction: boolean } | null>(null);
+  const [isGeneratingVillainAction, setIsGeneratingVillainAction] = useState(false);
   
   // Ref for the scrollable comic panels container
   const comicScrollRef = useRef<HTMLDivElement>(null);
@@ -153,9 +158,15 @@ export function ComicBattleInterface() {
   };
 
   const generateBattlePanel = async (actionDescription: string, isCustom: boolean = false, isVillainAction: boolean = false) => {
-    if (!character || !opponent || isGeneratingPanel) return;
+    if (!character || !opponent) return;
 
-    setIsGeneratingPanel(true);
+    // Set appropriate loading state
+    if (isVillainAction) {
+      setIsGeneratingVillainAction(true);
+    } else {
+      setIsGeneratingPanel(true);
+    }
+
     const panelIndex = battlePanels.length;
     const panelId = `panel-${panelIndex}`;
 
@@ -183,7 +194,11 @@ export function ComicBattleInterface() {
 
     // In demo mode, just add placeholder and finish
     if (demoMode) {
-      setIsGeneratingPanel(false);
+      if (isVillainAction) {
+        setIsGeneratingVillainAction(false);
+      } else {
+        setIsGeneratingPanel(false);
+      }
       if (isCustom) {
         setCustomScene('');
       }
@@ -238,7 +253,11 @@ export function ComicBattleInterface() {
         return newPanels;
       });
     } finally {
-      setIsGeneratingPanel(false);
+      if (isVillainAction) {
+        setIsGeneratingVillainAction(false);
+      } else {
+        setIsGeneratingPanel(false);
+      }
       if (isCustom) {
         setCustomScene('');
       }
@@ -283,20 +302,19 @@ export function ComicBattleInterface() {
     }
   };
 
-  const handleReplacePanel = async (panelIndex: number) => {
+  const handleReplacePanel = (panelIndex: number) => {
     const panel = battlePanels[panelIndex];
     if (!panel) return;
 
-    // Generate a new action description based on the character type
-    let newDescription: string;
-    if (panel.isVillainAction) {
-      const villainAction = getRandomVillainAction();
-      newDescription = villainAction?.description || panel.description;
-    } else {
-      const heroAction = getRandomAction();
-      newDescription = heroAction?.description || panel.description;
-    }
+    setReplaceModalTarget({ index: panelIndex, isVillainAction: panel.isVillainAction || false });
+    setShowReplaceModal(true);
+  };
 
+  const handleReplaceActionGenerated = async (newDescription: string) => {
+    if (!replaceModalTarget) return;
+
+    const { index: panelIndex, isVillainAction } = replaceModalTarget;
+    
     // Update the panel with new description and regenerate
     setBattlePanels(prev => {
       const newPanels = [...prev];
@@ -312,8 +330,8 @@ export function ComicBattleInterface() {
 
     // Generate new image if not in demo mode
     if (!demoMode) {
-      const actingCharacter = panel.isVillainAction ? opponent : character;
-      const targetCharacter = panel.isVillainAction ? character : opponent;
+      const actingCharacter = isVillainAction ? opponent : character;
+      const targetCharacter = isVillainAction ? character : opponent;
 
       const prompt = `Epic fantasy battle comic panel: ${actingCharacter?.character_name} (${actingCharacter?.image_prompt}) ${newDescription} against ${targetCharacter?.character_name} (${targetCharacter?.image_prompt}). 
       
@@ -366,6 +384,8 @@ export function ComicBattleInterface() {
         });
       }
     }
+
+    setReplaceModalTarget(null);
   };
 
   const handleDeletePanel = (panelIndex: number) => {
@@ -420,6 +440,9 @@ export function ComicBattleInterface() {
     setShowRegenerateModal(false);
     setRegenerateTarget(null);
   };
+
+  // Check if any action is being generated (hero or villain)
+  const isAnyActionGenerating = isGeneratingPanel || isGeneratingVillainAction;
 
   if (!character || !opponent) return null;
 
@@ -538,9 +561,9 @@ export function ComicBattleInterface() {
             <div>
               <button
                 onClick={handleFinalizeBattle}
-                disabled={isGeneratingPanel || battlePanels.length === 0}
+                disabled={isAnyActionGenerating || battlePanels.length === 0}
                 className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-300 ${
-                  isGeneratingPanel || battlePanels.length === 0
+                  isAnyActionGenerating || battlePanels.length === 0
                     ? 'bg-gray-800/30 border border-gray-600/30 text-gray-500 cursor-not-allowed' 
                     : 'bg-gradient-to-r from-yellow-600 to-red-600 hover:from-yellow-500 hover:to-red-500 text-white shadow-lg hover:shadow-orange-500/25 border border-yellow-500/50'
                 }`}
@@ -594,6 +617,18 @@ export function ComicBattleInterface() {
                       })}
                     </div>
                   ))}
+                  
+                  {/* Show skeleton panel for villain action being generated */}
+                  {isGeneratingVillainAction && (
+                    <div className="flex gap-4" style={{ height: '320px' }}>
+                      <div className="flex flex-col" style={{ width: '33.33%' }}>
+                        <SkeletonPanel 
+                          isVillainAction={true} 
+                          index={battlePanels.length} 
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : null}
             </div>
@@ -633,7 +668,7 @@ export function ComicBattleInterface() {
                           action={action}
                           onClick={() => handleActionClick(action, index)}
                           onRefresh={() => replaceAction(index)}
-                          disabled={isGeneratingPanel}
+                          disabled={isAnyActionGenerating}
                         />
                       ))}
                     </div>
@@ -645,7 +680,7 @@ export function ComicBattleInterface() {
                       value={customScene}
                       onChange={setCustomScene}
                       onSubmit={handleCustomScene}
-                      disabled={isGeneratingPanel}
+                      disabled={isAnyActionGenerating}
                     />
                   </div>
                 </div>
@@ -711,6 +746,17 @@ export function ComicBattleInterface() {
         onCharacterGenerated={handleCharacterRegenerated}
         targetType={regenerateTarget}
         demoMode={demoMode}
+      />
+
+      {/* Replace Action Modal */}
+      <ReplaceActionModal
+        isOpen={showReplaceModal}
+        onClose={() => {
+          setShowReplaceModal(false);
+          setReplaceModalTarget(null);
+        }}
+        onActionGenerated={handleReplaceActionGenerated}
+        isVillainAction={replaceModalTarget?.isVillainAction || false}
       />
     </div>
   );
