@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronUp, ChevronDown, Wand2, RotateCcw } from 'lucide-react';
+import { ChevronUp, ChevronDown, Wand2, RotateCcw, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { CharacterPortrait } from './ui/CharacterPortrait';
 import { ComicPanel } from './ui/ComicPanel';
@@ -29,6 +29,8 @@ const LAYOUT_PATTERNS = [
   [33.33, 33.33, 33.34], // Panel 1 (1/3), Panel 2 (1/3), Panel 3 (1/3)
 ];
 
+const PANELS_PER_PAGE = 12; // 4 rows × 3 panels per row
+
 export function ComicBattleInterface() {
   const { state, dispatch } = useGame();
   const { character, opponent, demoMode } = state;
@@ -41,6 +43,7 @@ export function ComicBattleInterface() {
   const [showRestartModal, setShowRestartModal] = useState(false);
   const [showRegenerateModal, setShowRegenerateModal] = useState(false);
   const [regenerateTarget, setRegenerateTarget] = useState<'hero' | 'villain' | null>(null);
+  const [currentPage, setCurrentPage] = useState(0);
   
   // Ref for the scrollable comic panels container
   const comicScrollRef = useRef<HTMLDivElement>(null);
@@ -66,6 +69,14 @@ export function ComicBattleInterface() {
       });
     }
   }, [battlePanels.length]); // Only trigger when panel count changes
+
+  // Update current page when panels are added
+  useEffect(() => {
+    const totalPages = Math.ceil(battlePanels.length / PANELS_PER_PAGE);
+    if (totalPages > 0) {
+      setCurrentPage(totalPages - 1); // Always show the latest page
+    }
+  }, [battlePanels.length]);
 
   // Function to get a new random action from character powers
   const getRandomAction = (excludeIndex?: number) => {
@@ -109,22 +120,32 @@ export function ComicBattleInterface() {
     return LAYOUT_PATTERNS[rowIndex % LAYOUT_PATTERNS.length];
   };
 
-  // Function to group panels into rows of 3 with predefined layouts
-  const groupPanelsIntoRows = (panels: BattlePanel[]) => {
-    const rows = [];
+  // Function to group panels into pages and rows
+  const groupPanelsIntoPages = (panels: BattlePanel[]) => {
+    const pages = [];
     
-    for (let i = 0; i < panels.length; i += 3) {
-      const rowPanels = panels.slice(i, i + 3);
-      const rowIndex = Math.floor(i / 3);
-      const layoutPattern = getLayoutPattern(rowIndex);
+    for (let pageIndex = 0; pageIndex < Math.ceil(panels.length / PANELS_PER_PAGE); pageIndex++) {
+      const pageStart = pageIndex * PANELS_PER_PAGE;
+      const pageEnd = Math.min(pageStart + PANELS_PER_PAGE, panels.length);
+      const pagePanels = panels.slice(pageStart, pageEnd);
       
-      rows.push({
-        panels: rowPanels,
-        widths: layoutPattern
-      });
+      const rows = [];
+      for (let i = 0; i < pagePanels.length; i += 3) {
+        const rowPanels = pagePanels.slice(i, i + 3);
+        const globalRowIndex = Math.floor((pageStart + i) / 3);
+        const layoutPattern = getLayoutPattern(globalRowIndex);
+        
+        rows.push({
+          panels: rowPanels,
+          widths: layoutPattern,
+          globalStartIndex: pageStart + i
+        });
+      }
+      
+      pages.push({ rows, pageIndex });
     }
     
-    return rows;
+    return pages;
   };
 
   const generateBattlePanel = async (actionDescription: string, isCustom: boolean = false, isVillainAction: boolean = false) => {
@@ -258,6 +279,103 @@ export function ComicBattleInterface() {
     }
   };
 
+  const handleReplacePanel = async (panelIndex: number) => {
+    const panel = battlePanels[panelIndex];
+    if (!panel) return;
+
+    // Generate a new action description based on the character type
+    let newDescription: string;
+    if (panel.isVillainAction) {
+      const villainAction = getRandomVillainAction();
+      newDescription = villainAction?.description || panel.description;
+    } else {
+      const heroAction = getRandomAction();
+      newDescription = heroAction?.description || panel.description;
+    }
+
+    // Update the panel with new description and regenerate
+    setBattlePanels(prev => {
+      const newPanels = [...prev];
+      newPanels[panelIndex] = {
+        ...newPanels[panelIndex],
+        description: newDescription,
+        isGenerating: !demoMode,
+        error: false,
+        imageUrl: demoMode ? undefined : newPanels[panelIndex].imageUrl
+      };
+      return newPanels;
+    });
+
+    // Generate new image if not in demo mode
+    if (!demoMode) {
+      const actingCharacter = panel.isVillainAction ? opponent : character;
+      const targetCharacter = panel.isVillainAction ? character : opponent;
+
+      const prompt = `Epic fantasy battle comic panel: ${actingCharacter?.character_name} (${actingCharacter?.image_prompt}) ${newDescription} against ${targetCharacter?.character_name} (${targetCharacter?.image_prompt}). 
+      
+      Action: ${newDescription}. Dynamic combat scene with explosive magical effects, dramatic lighting with sparks and energy, debris flying through the air, fierce expressions, dynamic action poses mid-combat, cinematic battle photography, high contrast lighting, magical effects, destruction and chaos, epic confrontation, comic book art style with vibrant colors.`;
+
+      try {
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/character-image`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ prompt }),
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error('Failed to generate battle panel');
+        }
+
+        const data = await response.json();
+        
+        setBattlePanels(prev => {
+          const newPanels = [...prev];
+          if (newPanels[panelIndex]) {
+            newPanels[panelIndex] = {
+              ...newPanels[panelIndex],
+              imageUrl: data.url,
+              aspectRatio: data.aspect_ratio,
+              isGenerating: false,
+              error: false
+            };
+          }
+          return newPanels;
+        });
+
+      } catch (error) {
+        console.error('Failed to generate replacement panel:', error);
+        setBattlePanels(prev => {
+          const newPanels = [...prev];
+          if (newPanels[panelIndex]) {
+            newPanels[panelIndex] = {
+              ...newPanels[panelIndex],
+              isGenerating: false,
+              error: true
+            };
+          }
+          return newPanels;
+        });
+      }
+    }
+  };
+
+  const handleDeletePanel = (panelIndex: number) => {
+    setBattlePanels(prev => prev.filter((_, index) => index !== panelIndex));
+    
+    // Adjust current page if necessary
+    const newTotalPages = Math.ceil((battlePanels.length - 1) / PANELS_PER_PAGE);
+    if (currentPage >= newTotalPages && newTotalPages > 0) {
+      setCurrentPage(newTotalPages - 1);
+    } else if (battlePanels.length === 1) {
+      setCurrentPage(0);
+    }
+  };
+
   const handleFinalizeBattle = () => {
     // Generate final victory/defeat panel
     const finalDescription = "delivers the final decisive blow in an epic conclusion";
@@ -267,6 +385,7 @@ export function ComicBattleInterface() {
   const handleRestartComic = () => {
     setBattlePanels([]);
     setCustomScene('');
+    setCurrentPage(0);
     setShowRestartModal(false);
   };
 
@@ -296,7 +415,9 @@ export function ComicBattleInterface() {
 
   if (!character || !opponent) return null;
 
-  const panelRows = groupPanelsIntoRows(battlePanels);
+  const pages = groupPanelsIntoPages(battlePanels);
+  const totalPages = pages.length;
+  const currentPageData = pages[currentPage];
 
   return (
     <div className="h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 flex flex-col">
@@ -345,10 +466,10 @@ export function ComicBattleInterface() {
 
         {/* Central Comic Strip Area */}
         <div className="flex-1 flex flex-col">
-          <div className="bg-gray-900/50 backdrop-blur-sm border-b border-purple-500/20 p-4 flex items-center justify-center relative">
+          <div className="bg-gray-900/50 backdrop-blur-sm border-b border-purple-500/20 p-4 flex items-center justify-between">
             
             {/* Restart Button - Left Side */}
-            <div className="absolute left-4">
+            <div>
               <button
                 onClick={() => setShowRestartModal(true)}
                 disabled={battlePanels.length === 0}
@@ -364,17 +485,49 @@ export function ComicBattleInterface() {
               </button>
             </div>
 
-            <h3 className="text-2xl font-bold text-white text-center">
-              Battle Comic Strip
-              {demoMode && (
-                <span className="ml-3 text-sm font-normal text-purple-300 bg-purple-900/30 px-3 py-1 rounded-full border border-purple-500/30">
-                  Demo Mode
-                </span>
+            {/* Title and Page Navigation - Center */}
+            <div className="flex items-center gap-4">
+              {/* Page Navigation */}
+              {totalPages > 1 && (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
+                    disabled={currentPage === 0}
+                    className="p-2 rounded-lg bg-gray-800/50 hover:bg-gray-700/50 disabled:opacity-50 disabled:cursor-not-allowed text-purple-300 hover:text-purple-200 transition-all duration-200"
+                    title="Previous page"
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                  
+                  <div className="px-3 py-1 bg-purple-900/30 border border-purple-500/30 rounded-lg">
+                    <span className="text-purple-200 text-sm font-medium">
+                      Page {currentPage + 1} of {totalPages}
+                    </span>
+                  </div>
+                  
+                  <button
+                    onClick={() => setCurrentPage(Math.min(totalPages - 1, currentPage + 1))}
+                    disabled={currentPage === totalPages - 1}
+                    className="p-2 rounded-lg bg-gray-800/50 hover:bg-gray-700/50 disabled:opacity-50 disabled:cursor-not-allowed text-purple-300 hover:text-purple-200 transition-all duration-200"
+                    title="Next page"
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                </div>
               )}
-            </h3>
+
+              <h3 className="text-2xl font-bold text-white text-center">
+                Battle Comic Strip
+                {demoMode && (
+                  <span className="ml-3 text-sm font-normal text-purple-300 bg-purple-900/30 px-3 py-1 rounded-full border border-purple-500/30">
+                    Demo Mode
+                  </span>
+                )}
+              </h3>
+            </div>
             
             {/* Finalize Button - Right Side */}
-            <div className="absolute right-4">
+            <div>
               <button
                 onClick={handleFinalizeBattle}
                 disabled={isGeneratingPanel || battlePanels.length === 0}
@@ -407,12 +560,12 @@ export function ComicBattleInterface() {
                     </p>
                   </div>
                 </div>
-              ) : (
+              ) : currentPageData ? (
                 <div className="space-y-6">
-                  {panelRows.map((row, rowIndex) => (
+                  {currentPageData.rows.map((row, rowIndex) => (
                     <div key={rowIndex} className="flex gap-4" style={{ height: '320px' }}>
                       {row.panels.map((panel, panelIndex) => {
-                        const globalIndex = rowIndex * 3 + panelIndex;
+                        const globalIndex = row.globalStartIndex + panelIndex;
                         
                         return (
                           <div 
@@ -424,6 +577,8 @@ export function ComicBattleInterface() {
                               panel={panel}
                               index={globalIndex}
                               onRetry={() => handleRetryPanel(globalIndex)}
+                              onReplace={() => handleReplacePanel(globalIndex)}
+                              onDelete={() => handleDeletePanel(globalIndex)}
                               demoMode={demoMode}
                             />
                           </div>
@@ -432,7 +587,7 @@ export function ComicBattleInterface() {
                     </div>
                   ))}
                 </div>
-              )}
+              ) : null}
             </div>
 
             {/* Battle Controls Section - Taking Space */}

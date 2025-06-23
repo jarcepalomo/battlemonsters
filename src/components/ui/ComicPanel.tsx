@@ -1,5 +1,5 @@
-import React from 'react';
-import { Loader2, AlertCircle, RefreshCw, Zap, Image, Sword, Skull } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Loader2, AlertCircle, RefreshCw, Zap, Image, Sword, Skull, MoreVertical, Replace, Trash2 } from 'lucide-react';
 
 interface BattlePanelData {
   id: string;
@@ -17,16 +17,85 @@ interface ComicPanelProps {
   panel: BattlePanelData;
   index: number;
   onRetry: () => void;
+  onReplace: () => void;
+  onDelete: () => void;
   demoMode?: boolean;
 }
 
-export function ComicPanel({ panel, index, onRetry, demoMode = false }: ComicPanelProps) {
+export function ComicPanel({ panel, index, onRetry, onReplace, onDelete, demoMode = false }: ComicPanelProps) {
+  const [showKebabMenu, setShowKebabMenu] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowKebabMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleKebabClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowKebabMenu(!showKebabMenu);
+  };
+
+  const handleMenuAction = (action: 'replace' | 'delete') => {
+    setShowKebabMenu(false);
+    if (action === 'replace') {
+      onReplace();
+    } else if (action === 'delete') {
+      onDelete();
+    }
+  };
+
   return (
-    <div className="h-full flex flex-col">
+    <div 
+      className="h-full flex flex-col relative"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
       {/* Panel Number Badge */}
-      <div className="absolute -top-3 -left-3 z-10 bg-gradient-to-r from-purple-600 to-pink-600 text-white w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border-2 border-white shadow-lg">
+      <div className="absolute -top-3 -left-3 z-20 bg-gradient-to-r from-purple-600 to-pink-600 text-white w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border-2 border-white shadow-lg">
         {index + 1}
       </div>
+
+      {/* Kebab Menu Button */}
+      {isHovered && !panel.isGenerating && (
+        <div className="absolute top-2 right-2 z-20" ref={menuRef}>
+          <button
+            onClick={handleKebabClick}
+            className="p-1.5 rounded-full bg-gray-900/80 hover:bg-gray-800/80 text-white transition-all duration-200 shadow-lg"
+            title="Panel options"
+          >
+            <MoreVertical className="w-4 h-4" />
+          </button>
+
+          {/* Dropdown Menu */}
+          {showKebabMenu && (
+            <div className="absolute top-full right-0 mt-1 bg-gray-900/95 backdrop-blur-sm border border-purple-500/30 rounded-lg shadow-2xl min-w-[140px] overflow-hidden">
+              <button
+                onClick={() => handleMenuAction('replace')}
+                className="w-full px-3 py-2 text-left text-sm text-purple-200 hover:text-purple-100 hover:bg-purple-600/20 transition-colors flex items-center gap-2"
+              >
+                <Replace className="w-4 h-4" />
+                Replace
+              </button>
+              <button
+                onClick={() => handleMenuAction('delete')}
+                className="w-full px-3 py-2 text-left text-sm text-red-300 hover:text-red-200 hover:bg-red-600/20 transition-colors flex items-center gap-2"
+              >
+                <Trash2 className="w-4 h-4" />
+                Delete
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Comic Panel - Takes most of the height */}
       <div className="flex-1 bg-gray-800/50 rounded-t-xl border-4 border-b-0 border-purple-500/30 overflow-hidden shadow-xl relative">
@@ -80,7 +149,7 @@ export function ComicPanel({ panel, index, onRetry, demoMode = false }: ComicPan
             
             {/* Action Type Indicator */}
             {panel.isVillainAction && (
-              <div className="absolute top-2 right-2 bg-red-600/80 text-white px-2 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+              <div className="absolute top-2 left-2 bg-red-600/80 text-white px-2 py-1 rounded-full text-xs font-bold flex items-center gap-1">
                 <Skull className="w-3 h-3" />
                 Villain
               </div>
