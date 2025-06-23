@@ -160,7 +160,7 @@ export function PromptInput({ selectedPrompt }: PromptInputProps) {
 
   const getPlaceholderText = () => {
     if (state.demoMode) {
-      return 'Demo mode active - click to start battle with predefined characters';
+      return 'Demo mode active - click to start battle';
     }
     return 'Describe your legendary character...';
   };
@@ -188,10 +188,10 @@ export function PromptInput({ selectedPrompt }: PromptInputProps) {
             onFocus={handleFocus}
             placeholder={getPlaceholderText()}
             disabled={state.demoMode}
-            className={`w-full pl-12 pr-12 py-3.5 border border-purple-500/30 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 backdrop-blur-sm resize-none leading-6 ${
+            className={`w-full pl-12 pr-12 py-3.5 border border-purple-500/30 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 backdrop-blur-sm resize-none leading-6 ${
               state.demoMode 
-                ? 'bg-gray-800/30 cursor-not-allowed' 
-                : 'bg-gray-800/50'
+                ? 'bg-gray-800/30 cursor-not-allowed placeholder-gray-400 italic' 
+                : 'bg-gray-800/50 placeholder-gray-400'
             }`}
             style={{ 
               minHeight: '56px',
