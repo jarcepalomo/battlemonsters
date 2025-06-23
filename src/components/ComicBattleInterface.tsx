@@ -9,6 +9,8 @@ import { FinalizeButton } from './ui/FinalizeButton';
 import { RestartModal } from './ui/RestartModal';
 import { RegenerateCharacterModal } from './ui/RegenerateCharacterModal';
 import { ReplaceActionModal } from './ui/ReplaceActionModal';
+import { FinalizeBattleModal } from './ui/FinalizeBattleModal';
+import { PostBattleControls } from './ui/PostBattleControls';
 import { SkeletonPanel } from './ui/SkeletonPanel';
 
 interface BattlePanel {
@@ -49,6 +51,8 @@ export function ComicBattleInterface() {
   const [currentPage, setCurrentPage] = useState(0);
   const [showReplaceModal, setShowReplaceModal] = useState(false);
   const [replaceModalTarget, setReplaceModalTarget] = useState<{ index: number; isVillainAction: boolean } | null>(null);
+  const [showFinalizeBattleModal, setShowFinalizeBattleModal] = useState(false);
+  const [isBattleFinalized, setIsBattleFinalized] = useState(false);
   
   // Ref for the scrollable comic panels container
   const comicScrollRef = useRef<HTMLDivElement>(null);
@@ -415,15 +419,38 @@ export function ComicBattleInterface() {
   };
 
   const handleFinalizeBattle = () => {
-    // Generate final victory/defeat panel
-    const finalDescription = "delivers the final decisive blow in an epic conclusion";
-    generateBattlePanel(finalDescription);
+    setShowFinalizeBattleModal(true);
+  };
+
+  const handleFinalSceneGenerated = async (description: string) => {
+    // Generate the final panel
+    await generateBattlePanel(description);
+    
+    // Mark battle as finalized
+    setIsBattleFinalized(true);
+    
+    // Collapse controls to show the post-battle interface
+    setIsControlsExpanded(false);
+  };
+
+  const handleDownloadComic = () => {
+    // TODO: Implement comic download functionality
+    console.log('Download comic functionality to be implemented');
+    alert('Download functionality will be implemented soon!');
+  };
+
+  const handleShareComic = () => {
+    // TODO: Implement comic sharing functionality
+    console.log('Share comic functionality to be implemented');
+    alert('Share functionality will be implemented soon!');
   };
 
   const handleRestartComic = () => {
     setBattlePanels([]);
     setCustomScene('');
     setCurrentPage(0);
+    setIsBattleFinalized(false);
+    setIsControlsExpanded(true);
     setShowRestartModal(false);
   };
 
@@ -569,17 +596,19 @@ export function ComicBattleInterface() {
             
             {/* Finalize Button - Right Side */}
             <div>
-              <button
-                onClick={handleFinalizeBattle}
-                disabled={isAnyActionGenerating || battlePanels.length === 0}
-                className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-300 ${
-                  isAnyActionGenerating || battlePanels.length === 0
-                    ? 'bg-gray-800/30 border border-gray-600/30 text-gray-500 cursor-not-allowed' 
-                    : 'bg-gradient-to-r from-yellow-600 to-red-600 hover:from-yellow-500 hover:to-red-500 text-white shadow-lg hover:shadow-orange-500/25 border border-yellow-500/50'
-                }`}
-              >
-                Finalize Battle
-              </button>
+              {!isBattleFinalized && (
+                <button
+                  onClick={handleFinalizeBattle}
+                  disabled={isAnyActionGenerating || battlePanels.length === 0}
+                  className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-300 ${
+                    isAnyActionGenerating || battlePanels.length === 0
+                      ? 'bg-gray-800/30 border border-gray-600/30 text-gray-500 cursor-not-allowed' 
+                      : 'bg-gradient-to-r from-yellow-600 to-red-600 hover:from-yellow-500 hover:to-red-500 text-white shadow-lg hover:shadow-orange-500/25 border border-yellow-500/50'
+                  }`}
+                >
+                  Finalize Battle
+                </button>
+              )}
             </div>
           </div>
           
@@ -644,59 +673,68 @@ export function ComicBattleInterface() {
               )}
             </div>
 
-            {/* Battle Controls Section - Taking Space */}
-            <div className="bg-gray-900/95 backdrop-blur-sm border-t border-purple-500/30 shadow-2xl">
-              
-              {/* Collapse/Expand Header */}
-              <button
-                onClick={() => setIsControlsExpanded(!isControlsExpanded)}
-                className="w-full p-4 bg-gradient-to-r from-purple-600/20 to-pink-600/20 hover:from-purple-600/30 hover:to-pink-600/30 transition-all duration-200 flex items-center justify-between"
-              >
-                <div className="flex items-center gap-3">
-                  <Wand2 className="w-5 h-5 text-purple-400" />
-                  <span className="text-white font-semibold">Battle Controls</span>
-                  <span className="text-purple-300 text-sm">
-                    {isControlsExpanded ? 'Click to collapse' : 'Click to expand'}
-                  </span>
-                </div>
-                <div className="text-purple-400">
-                  {isControlsExpanded ? <ChevronDown className="w-5 h-5" /> : <ChevronUp className="w-5 h-5" />}
-                </div>
-              </button>
-
-              {/* Expandable Content */}
-              <div className={`transition-all duration-300 ease-in-out ${
-                isControlsExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
-              } overflow-hidden`}>
-                <div className="p-6 space-y-6">
-                  
-                  {/* Suggested Actions */}
-                  <div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      {suggestedActions.map((action, index) => (
-                        <ActionButton
-                          key={`${action.label}-${index}`}
-                          action={action}
-                          onClick={() => handleActionClick(action, index)}
-                          onRefresh={() => replaceAction(index)}
-                          disabled={isAnyActionGenerating}
-                        />
-                      ))}
-                    </div>
+            {/* Battle Controls Section or Post-Battle Controls */}
+            {isBattleFinalized ? (
+              <PostBattleControls
+                onDownload={handleDownloadComic}
+                onShare={handleShareComic}
+                onRestart={handleRestartComic}
+                panelCount={battlePanels.length}
+              />
+            ) : (
+              <div className="bg-gray-900/95 backdrop-blur-sm border-t border-purple-500/30 shadow-2xl">
+                
+                {/* Collapse/Expand Header */}
+                <button
+                  onClick={() => setIsControlsExpanded(!isControlsExpanded)}
+                  className="w-full p-4 bg-gradient-to-r from-purple-600/20 to-pink-600/20 hover:from-purple-600/30 hover:to-pink-600/30 transition-all duration-200 flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-3">
+                    <Wand2 className="w-5 h-5 text-purple-400" />
+                    <span className="text-white font-semibold">Battle Controls</span>
+                    <span className="text-purple-300 text-sm">
+                      {isControlsExpanded ? 'Click to collapse' : 'Click to expand'}
+                    </span>
                   </div>
+                  <div className="text-purple-400">
+                    {isControlsExpanded ? <ChevronDown className="w-5 h-5" /> : <ChevronUp className="w-5 h-5" />}
+                  </div>
+                </button>
 
-                  {/* Custom Scene Input */}
-                  <div>
-                    <CustomSceneInput
-                      value={customScene}
-                      onChange={setCustomScene}
-                      onSubmit={handleCustomScene}
-                      disabled={isAnyActionGenerating}
-                    />
+                {/* Expandable Content */}
+                <div className={`transition-all duration-300 ease-in-out ${
+                  isControlsExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+                } overflow-hidden`}>
+                  <div className="p-6 space-y-6">
+                    
+                    {/* Suggested Actions */}
+                    <div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {suggestedActions.map((action, index) => (
+                          <ActionButton
+                            key={`${action.label}-${index}`}
+                            action={action}
+                            onClick={() => handleActionClick(action, index)}
+                            onRefresh={() => replaceAction(index)}
+                            disabled={isAnyActionGenerating}
+                          />
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Custom Scene Input */}
+                    <div>
+                      <CustomSceneInput
+                        value={customScene}
+                        onChange={setCustomScene}
+                        onSubmit={handleCustomScene}
+                        disabled={isAnyActionGenerating}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
 
@@ -768,6 +806,13 @@ export function ComicBattleInterface() {
         }}
         onActionGenerated={handleReplaceActionGenerated}
         isVillainAction={replaceModalTarget?.isVillainAction || false}
+      />
+
+      {/* Finalize Battle Modal */}
+      <FinalizeBattleModal
+        isOpen={showFinalizeBattleModal}
+        onClose={() => setShowFinalizeBattleModal(false)}
+        onFinalSceneGenerated={handleFinalSceneGenerated}
       />
     </div>
   );
