@@ -36,6 +36,7 @@ export interface GameState {
   selectedPower?: number;
   isGeneratingImage: boolean;
   imageGenerationError: boolean;
+  demoMode: boolean;
 }
 
 export type GameAction =
@@ -46,4 +47,6 @@ export type GameAction =
   | { type: 'SELECT_POWER'; payload: number | undefined }
   | { type: 'SET_CHARACTER_IMAGE'; payload: string }
   | { type: 'SET_GENERATING_IMAGE'; payload: boolean }
-  | { type: 'SET_IMAGE_GENERATION_ERROR'; payload: boolean };
+  | { type: 'SET_IMAGE_GENERATION_ERROR'; payload: boolean }
+  | { type: 'TOGGLE_DEMO_MODE'; payload: boolean }
+  | { type: 'RESET_GAME' };

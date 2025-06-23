@@ -8,6 +8,7 @@ const initialState: GameState = {
   error: null,
   isGeneratingImage: false,
   imageGenerationError: false,
+  demoMode: false,
 };
 
 function gameReducer(state: GameState, action: GameAction): GameState {
@@ -35,6 +36,13 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       return { ...state, isGeneratingImage: action.payload };
     case 'SET_IMAGE_GENERATION_ERROR':
       return { ...state, imageGenerationError: action.payload };
+    case 'TOGGLE_DEMO_MODE':
+      return { ...state, demoMode: action.payload };
+    case 'RESET_GAME':
+      return { 
+        ...initialState, 
+        demoMode: state.demoMode // Preserve demo mode setting
+      };
     default:
       return state;
   }
