@@ -32,7 +32,7 @@ export function PromptInput({ selectedPrompt }: PromptInputProps) {
       
       // Calculate the number of lines
       const lineHeight = 24; // Approximate line height in pixels
-      const padding = 20; // Top and bottom padding (10px each)
+      const padding = 26; // Top and bottom padding (13px each - increased from 20px)
       const minHeight = lineHeight + padding; // Minimum height for 1 line
       const maxHeight = (lineHeight * 5) + padding; // Maximum height for 5 lines
       
@@ -147,10 +147,10 @@ export function PromptInput({ selectedPrompt }: PromptInputProps) {
             onKeyDown={handleKeyDown}
             onFocus={handleFocus}
             placeholder="Describe your legendary character..."
-            className="w-full pl-12 pr-12 py-2.5 bg-gray-800/50 border border-purple-500/30 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 backdrop-blur-sm resize-none leading-6"
+            className="w-full pl-12 pr-12 py-3.5 bg-gray-800/50 border border-purple-500/30 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 backdrop-blur-sm resize-none leading-6"
             style={{ 
-              minHeight: '44px', // Reduced minimum height
-              maxHeight: '140px' // Reduced maximum height proportionally
+              minHeight: '50px', // Increased from 44px to 50px (+6px)
+              maxHeight: '146px' // Increased from 140px to 146px (+6px)
             }}
             rows={1}
           />
