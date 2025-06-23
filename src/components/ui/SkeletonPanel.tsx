@@ -9,12 +9,7 @@ interface SkeletonPanelProps {
 export function SkeletonPanel({ isVillainAction = false, index }: SkeletonPanelProps) {
   return (
     <div className="h-full flex flex-col relative">
-      {/* Panel Number Badge */}
-      <div className="absolute -top-3 -left-3 z-20 bg-gradient-to-r from-purple-600 to-pink-600 text-white w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border-2 border-white shadow-lg">
-        {index + 1}
-      </div>
-
-      {/* Skeleton Panel */}
+      {/* Comic Panel */}
       <div className="flex-1 bg-gray-800/50 rounded-t-xl border-4 border-b-0 border-purple-500/30 overflow-hidden shadow-xl relative">
         <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-purple-900/20 to-pink-900/20 animate-pulse">
           <Loader2 className="w-12 h-12 text-purple-400 animate-spin mb-4" />
