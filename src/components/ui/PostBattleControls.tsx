@@ -1,5 +1,6 @@
 import React from 'react';
-import { Download, Share2, RotateCcw, Trophy, Sparkles } from 'lucide-react';
+import { Download, Share2, RotateCcw, Trophy, Sparkles, ChevronLeft } from 'lucide-react';
+import { useGame } from '../../context/GameContext';
 
 interface PostBattleControlsProps {
   onDownload: () => void;
@@ -9,6 +10,12 @@ interface PostBattleControlsProps {
 }
 
 export function PostBattleControls({ onDownload, onShare, onRestart, panelCount }: PostBattleControlsProps) {
+  const { dispatch } = useGame();
+
+  const handleBackToMain = () => {
+    dispatch({ type: 'RESET_GAME' });
+  };
+
   return (
     <div className="bg-gray-900/95 backdrop-blur-sm border-t border-purple-500/30 shadow-2xl">
       <div className="p-6">
@@ -33,7 +40,24 @@ export function PostBattleControls({ onDownload, onShare, onRestart, panelCount 
         </div>
 
         {/* Action Buttons */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {/* Back to Main */}
+          <button
+            onClick={handleBackToMain}
+            className="group relative p-6 rounded-xl border-2 bg-gradient-to-br from-gray-600/20 to-gray-700/20 border-gray-500/40 hover:border-gray-400/60 text-white hover:shadow-lg hover:shadow-gray-500/25 transition-all duration-300 transform hover:scale-105"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-gray-600/10 to-gray-700/10 rounded-xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div className="relative flex flex-col items-center text-center">
+              <div className="mb-4 p-3 rounded-full bg-gradient-to-r from-gray-600 to-gray-700 group-hover:from-gray-500 group-hover:to-gray-600">
+                <ChevronLeft className="w-6 h-6" />
+              </div>
+              <h5 className="font-bold text-lg mb-2">Back</h5>
+              <p className="text-sm opacity-80 leading-relaxed">
+                Return to the main character creation screen
+              </p>
+            </div>
+          </button>
+
           {/* Download Comic */}
           <button
             onClick={onDownload}
@@ -44,9 +68,9 @@ export function PostBattleControls({ onDownload, onShare, onRestart, panelCount 
               <div className="mb-4 p-3 rounded-full bg-gradient-to-r from-green-600 to-emerald-600 group-hover:from-green-500 group-hover:to-emerald-500">
                 <Download className="w-6 h-6" />
               </div>
-              <h5 className="font-bold text-lg mb-2">Download Comic</h5>
+              <h5 className="font-bold text-lg mb-2">Download</h5>
               <p className="text-sm opacity-80 leading-relaxed">
-                Save your epic battle story as a high-quality image collection
+                Save your epic battle story as images
               </p>
             </div>
           </button>
@@ -61,9 +85,9 @@ export function PostBattleControls({ onDownload, onShare, onRestart, panelCount 
               <div className="mb-4 p-3 rounded-full bg-gradient-to-r from-blue-600 to-cyan-600 group-hover:from-blue-500 group-hover:to-cyan-500">
                 <Share2 className="w-6 h-6" />
               </div>
-              <h5 className="font-bold text-lg mb-2">Share Comic</h5>
+              <h5 className="font-bold text-lg mb-2">Share</h5>
               <p className="text-sm opacity-80 leading-relaxed">
-                Share your legendary battle with friends and fellow warriors
+                Share your legendary battle with others
               </p>
             </div>
           </button>
@@ -78,9 +102,9 @@ export function PostBattleControls({ onDownload, onShare, onRestart, panelCount 
               <div className="mb-4 p-3 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 group-hover:from-purple-500 group-hover:to-pink-500">
                 <RotateCcw className="w-6 h-6" />
               </div>
-              <h5 className="font-bold text-lg mb-2">New Adventure</h5>
+              <h5 className="font-bold text-lg mb-2">Restart</h5>
               <p className="text-sm opacity-80 leading-relaxed">
-                Start fresh with new characters and create another epic tale
+                Start fresh with new characters
               </p>
             </div>
           </button>

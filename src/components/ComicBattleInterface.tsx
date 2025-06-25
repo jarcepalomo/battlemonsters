@@ -12,6 +12,7 @@ import { ReplaceActionModal } from './ui/ReplaceActionModal';
 import { FinalizeBattleModal } from './ui/FinalizeBattleModal';
 import { PostBattleControls } from './ui/PostBattleControls';
 import { SkeletonPanel } from './ui/SkeletonPanel';
+import { BackToMainModal } from './ui/BackToMainModal';
 
 interface BattlePanel {
   id: string;
@@ -53,6 +54,7 @@ export function ComicBattleInterface() {
   const [replaceModalTarget, setReplaceModalTarget] = useState<{ index: number; isVillainAction: boolean } | null>(null);
   const [showFinalizeBattleModal, setShowFinalizeBattleModal] = useState(false);
   const [isBattleFinalized, setIsBattleFinalized] = useState(false);
+  const [showBackToMainModal, setShowBackToMainModal] = useState(false);
   
   // Ref for the scrollable comic panels container
   const comicScrollRef = useRef<HTMLDivElement>(null);
@@ -454,6 +456,21 @@ export function ComicBattleInterface() {
     setShowRestartModal(false);
   };
 
+  const handleBackToMain = () => {
+    // Check if there are any panels in the comic strip
+    if (battlePanels.length > 0) {
+      setShowBackToMainModal(true);
+    } else {
+      // No panels, go back directly
+      dispatch({ type: 'RESET_GAME' });
+    }
+  };
+
+  const handleConfirmBackToMain = () => {
+    setShowBackToMainModal(false);
+    dispatch({ type: 'RESET_GAME' });
+  };
+
   const handleRegenerateCharacter = (target: 'hero' | 'villain') => {
     setRegenerateTarget(target);
     setShowRegenerateModal(true);
@@ -536,8 +553,19 @@ export function ComicBattleInterface() {
         <div className="flex-1 flex flex-col">
           <div className="bg-gray-900/50 backdrop-blur-sm border-b border-purple-500/20 p-4 flex items-center justify-between">
             
-            {/* Restart Button - Left Side */}
-            <div>
+            {/* Left Side - Back and Restart Buttons */}
+            <div className="flex items-center gap-3">
+              {/* Back to Main Button */}
+              <button
+                onClick={handleBackToMain}
+                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-gray-600/20 to-gray-700/20 hover:from-gray-600/30 hover:to-gray-700/30 text-gray-300 hover:text-gray-200 border border-gray-500/30 hover:border-gray-400/50 rounded-lg font-semibold text-sm transition-all duration-300"
+                title="Back to main screen"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                Back
+              </button>
+
+              {/* Restart Button */}
               <button
                 onClick={() => setShowRestartModal(true)}
                 disabled={battlePanels.length === 0}
@@ -777,6 +805,14 @@ export function ComicBattleInterface() {
           </div>
         </div>
       </div>
+
+      {/* Back to Main Confirmation Modal */}
+      <BackToMainModal
+        isOpen={showBackToMainModal}
+        onClose={() => setShowBackToMainModal(false)}
+        onConfirm={handleConfirmBackToMain}
+        panelCount={battlePanels.length}
+      />
 
       {/* Restart Confirmation Modal */}
       <RestartModal
