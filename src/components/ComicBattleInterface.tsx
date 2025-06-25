@@ -495,6 +495,46 @@ export function ComicBattleInterface() {
     setRegenerateTarget(null);
   };
 
+  const handleRetryImageGeneration = async () => {
+    if (!character) return;
+    
+    try {
+      dispatch({ type: 'SET_GENERATING_IMAGE', payload: true });
+      dispatch({ type: 'SET_IMAGE_GENERATION_ERROR', payload: false });
+      
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/character-image`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ prompt: character.image_prompt }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to generate character image');
+      }
+
+      const data = await response.json();
+      
+      // Update character with image URL
+      const updatedCharacter = {
+        ...character,
+        image_url: data.url
+      };
+      
+      dispatch({ type: 'SET_CHARACTER', payload: updatedCharacter });
+      dispatch({ type: 'SET_GENERATING_IMAGE', payload: false });
+      
+    } catch (error) {
+      console.error('Failed to retry character image generation:', error);
+      dispatch({ type: 'SET_GENERATING_IMAGE', payload: false });
+      dispatch({ type: 'SET_IMAGE_GENERATION_ERROR', payload: true });
+    }
+  };
+
   // Check if any action is being generated (hero or villain)
   const isAnyActionGenerating = isGeneratingHeroAction || isGeneratingVillainAction;
 
@@ -515,7 +555,22 @@ export function ComicBattleInterface() {
           <div className="flex flex-col items-center">
             <div className="relative mb-4">
               <div className="w-48 h-48 rounded-xl overflow-hidden border-4 border-purple-500/50 shadow-2xl">
-                {character.image_url ? (
+                {state.isGeneratingImage ? (
+                  <div className="w-full h-full bg-gradient-to-br from-purple-600/20 to-pink-600/20 flex flex-col items-center justify-center">
+                    <div className="w-8 h-8 border-2 border-purple-400/30 border-t-purple-400 rounded-full animate-spin mb-2"></div>
+                    <p className="text-xs text-purple-300">Generating...</p>
+                  </div>
+                ) : state.imageGenerationError ? (
+                  <div className="w-full h-full bg-gradient-to-br from-red-600/20 to-orange-600/20 flex flex-col items-center justify-center p-4">
+                    <div className="text-red-400 text-xs text-center mb-2">Image failed</div>
+                    <button
+                      onClick={handleRetryImageGeneration}
+                      className="text-xs px-2 py-1 bg-purple-600 hover:bg-purple-500 text-white rounded transition-colors"
+                    >
+                      Retry
+                    </button>
+                  </div>
+                ) : character.image_url ? (
                   <img
                     src={character.image_url}
                     alt={character.character_name}

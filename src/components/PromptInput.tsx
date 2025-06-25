@@ -65,6 +65,49 @@ export function PromptInput({ selectedPrompt }: PromptInputProps) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const generateCharacterImage = async (character: any) => {
+    try {
+      dispatch({ type: 'SET_GENERATING_IMAGE', payload: true });
+      
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/character-image`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ prompt: character.image_prompt }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to generate character image');
+      }
+
+      const data = await response.json();
+      
+      // Update character with image URL
+      const updatedCharacter = {
+        ...character,
+        image_url: data.url
+      };
+      
+      dispatch({ type: 'SET_CHARACTER', payload: updatedCharacter });
+      dispatch({ type: 'SET_GENERATING_IMAGE', payload: false });
+      dispatch({ type: 'SET_IMAGE_GENERATION_ERROR', payload: false });
+      
+      return updatedCharacter;
+    } catch (error) {
+      console.error('Failed to generate character image:', error);
+      dispatch({ type: 'SET_GENERATING_IMAGE', payload: false });
+      dispatch({ type: 'SET_IMAGE_GENERATION_ERROR', payload: true });
+      
+      // Still set the character even if image generation fails
+      dispatch({ type: 'SET_CHARACTER', payload: character });
+      return character;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -90,6 +133,7 @@ export function PromptInput({ selectedPrompt }: PromptInputProps) {
     dispatch({ type: 'SET_LOADING', payload: true });
     
     try {
+      // First, generate the character data
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/character-creation`,
         {
@@ -107,11 +151,16 @@ export function PromptInput({ selectedPrompt }: PromptInputProps) {
       }
 
       const character = await response.json();
-      dispatch({ type: 'SET_CHARACTER', payload: character });
+      
+      // Set loading to false for character creation
+      dispatch({ type: 'SET_LOADING', payload: false });
+      
+      // Now generate the character image
+      await generateCharacterImage(character);
+      
       setPrompt('');
     } catch (error) {
       dispatch({ type: 'SET_ERROR', payload: error.message });
-    } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
     }
   };

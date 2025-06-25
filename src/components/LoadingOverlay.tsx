@@ -9,6 +9,9 @@ export function LoadingOverlay() {
     if (state.demoMode) {
       return "Preparing demo battle...";
     }
+    if (state.isGeneratingImage) {
+      return "Generating character image...";
+    }
     return "Generating your character...";
   };
 
